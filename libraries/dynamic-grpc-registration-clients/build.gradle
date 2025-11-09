@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.java.library)
     alias(libs.plugins.quarkus)
+    alias(libs.plugins.jandex)
 }
 
 
@@ -64,6 +65,7 @@ compileJava {
 }
 
 compileTestJava {
+    dependsOn tasks.named('jandex')
 }
 
 // Publishing configuration inherited from root project

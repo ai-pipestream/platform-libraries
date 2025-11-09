@@ -35,6 +35,8 @@ sourceSets {
     }
 }
 
+def descriptorOutputDir = "${buildDir}/generated/grpc-descriptor"
+
 // Configure protobuf plugin to generate descriptor with Google well-known types
 protobuf {
     protoc {
@@ -55,9 +57,11 @@ protobuf {
         }
 
         all().each { task ->
-            task.generateDescriptorSet = true
-            task.descriptorSetOptions.includeImports = true
-            task.descriptorSetOptions.path = "$buildDir/resources/main/META-INF/grpc/services.dsc"
+            if (task.sourceSet.name == 'main') {
+                task.generateDescriptorSet = true
+                task.descriptorSetOptions.includeImports = true
+                task.descriptorSetOptions.path = "${descriptorOutputDir}/META-INF/grpc/services.dsc"
+            }
         }
     }
 }
@@ -67,6 +71,13 @@ jar {
     dependsOn generateProto, generateTestProto
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from('build/resources/main') {
+        include 'META-INF/grpc/services.dsc'
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn generateProto
+    from(descriptorOutputDir) {
         include 'META-INF/grpc/services.dsc'
     }
 }

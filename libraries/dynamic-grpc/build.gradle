@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.java.library)
     alias(libs.plugins.quarkus)
+    alias(libs.plugins.jandex)
 }
 
 version = '1.0.0-SNAPSHOT'
@@ -76,6 +77,7 @@ compileJava {
 }
 
 compileTestJava {
+    dependsOn tasks.named('jandex')
     // Ensure grpc-wiremock is built before compiling tests
     dependsOn project(':libraries:grpc-wiremock').tasks.named('classes')
 }

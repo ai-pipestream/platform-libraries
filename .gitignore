@@ -30,3 +30,5 @@ target
 .build/
 .settings
 .mvn/wrapper/maven-wrapper.jar
+.quarkus
+gradle/wrapper/gradle-wrapper.jar
