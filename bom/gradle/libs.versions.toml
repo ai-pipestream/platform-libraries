@@ -160,17 +160,17 @@ password4j = { module = "com.password4j:password4j", version.ref = "password4j" 
 # SmallRye Reactive Messaging (for testing)
 smallrye-reactive-messaging-in-memory = { module = "io.smallrye.reactive:smallrye-reactive-messaging-in-memory", version.ref = "smallrye-reactive-messaging" }
 
-# Pipeline internal libraries (versions managed by BOM)
-pipeline-devservices = { module = "ai.pipestream:devservices" }
-pipeline-devservices-deployment = { module = "ai.pipestream:devservices-deployment" }
-pipeline-grpc-stubs = { module = "ai.pipestream:grpc-stubs" }
-pipeline-grpc-google-descriptor = { module = "ai.pipestream:grpc-google-descriptor" }
-pipeline-api = { module = "ai.pipestream:pipeline-api" }
-pipeline-commons = { module = "ai.pipestream:pipeline-commons" }
-pipeline-data-util = { module = "ai.pipestream:data-util" }
-pipeline-dynamic-grpc = { module = "ai.pipestream:dynamic-grpc" }
-pipeline-dynamic-grpc-registration-clients = { module = "ai.pipestream:dynamic-grpc-registration-clients" }
-pipeline-grpc-wiremock = { module = "ai.pipestream:grpc-wiremock" }
+# Pipestream internal libraries (versions managed by BOM)
+pipestream-compose-devservices = { module = "ai.pipestream:devservices" }
+pipestream-compose-devservices-deployment = { module = "ai.pipestream:devservices-deployment" }
+pipestream-grpc-stubs = { module = "ai.pipestream:grpc-stubs" }
+pipestream-grpc-google-descriptor = { module = "ai.pipestream:grpc-google-descriptor" }
+pipestream-api = { module = "ai.pipestream:pipeline-api" }
+pipestream-commons = { module = "ai.pipestream:pipeline-commons" }
+pipestream-data-util = { module = "ai.pipestream:data-util" }
+pipestream-dynamic-grpc = { module = "ai.pipestream:dynamic-grpc" }
+pipestream-dynamic-grpc-registration-clients = { module = "ai.pipestream:dynamic-grpc-registration-clients" }
+pipestream-grpc-wiremock = { module = "ai.pipestream:grpc-wiremock" }
 
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }
