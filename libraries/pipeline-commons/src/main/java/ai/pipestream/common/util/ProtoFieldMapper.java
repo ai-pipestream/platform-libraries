@@ -27,10 +27,13 @@ import java.util.stream.Collectors;
  * encapsulated within the `FieldAccessor`, which handles both reading and writing
  * field values based on a dot-notation path, similar to a simplified object property selector.
  *
- * <p><b>Corrected Features:</b>
+ * <p><b>Features:</b>
  * <ul>
  * <li>Handles literal value assignments (strings, booleans, numbers, null).</li>
  * <li>Correctly reads from and writes to `google.protobuf.Struct` fields, handling type conversions from DynamicMessage.</li>
+ * <li>Supports `google.protobuf.Any` field packing and unpacking.</li>
+ * <li>Provides type conversion between different proto types.</li>
+ * <li>Manages proto descriptors for dynamic message handling.</li>
  * <li>Provides precise error messages for invalid paths.</li>
  * </ul>
  */
@@ -38,14 +41,53 @@ import java.util.stream.Collectors;
 public class ProtoFieldMapper {
 
     private final RuleParser ruleParser = new RuleParser();
-    private final FieldAccessor fieldAccessor = new FieldAccessor();
+    private final FieldAccessor fieldAccessor;
+    private final DescriptorRegistry descriptorRegistry;
+    private final AnyHandler anyHandler;
+    private final TypeConverter typeConverter;
 
     /**
      * Default constructor for ProtoFieldMapper.
      * Creates a new instance with a RuleParser and FieldAccessor.
      */
     public ProtoFieldMapper() {
-        // No additional initialization needed
+        this.descriptorRegistry = new DescriptorRegistry();
+        this.anyHandler = new AnyHandler(descriptorRegistry);
+        this.typeConverter = new TypeConverter();
+        this.fieldAccessor = new FieldAccessor(anyHandler, typeConverter);
+    }
+
+    /**
+     * Constructor with custom descriptor registry.
+     * Allows pre-registering descriptors for Any field handling.
+     *
+     * @param descriptorRegistry The descriptor registry to use
+     */
+    public ProtoFieldMapper(DescriptorRegistry descriptorRegistry) {
+        this.descriptorRegistry = descriptorRegistry;
+        this.anyHandler = new AnyHandler(descriptorRegistry);
+        this.typeConverter = new TypeConverter();
+        this.fieldAccessor = new FieldAccessor(anyHandler, typeConverter);
+    }
+
+    /**
+     * Gets the descriptor registry for this mapper.
+     * Use this to register descriptors for Any field handling.
+     *
+     * @return The descriptor registry
+     */
+    public DescriptorRegistry getDescriptorRegistry() {
+        return descriptorRegistry;
+    }
+
+    /**
+     * Gets the AnyHandler for this mapper.
+     * Use this for manual Any field operations.
+     *
+     * @return The AnyHandler
+     */
+    public AnyHandler getAnyHandler() {
+        return anyHandler;
     }
 
     /**
@@ -166,6 +208,13 @@ public class ProtoFieldMapper {
 
     static class FieldAccessor {
         private static final String PATH_SEPARATOR_REGEX = "\\.";
+        private final AnyHandler anyHandler;
+        private final TypeConverter typeConverter;
+
+        public FieldAccessor(AnyHandler anyHandler, TypeConverter typeConverter) {
+            this.anyHandler = anyHandler;
+            this.typeConverter = typeConverter;
+        }
 
         public Object getValue(MessageOrBuilder root, String path, String rule) throws MappingException {
             String trimmedPath = path.trim();
@@ -210,7 +259,18 @@ public class ProtoFieldMapper {
 
                     if (i == parts.length - 1) {
                         if (!fd.isRepeated() && !currentMsg.hasField(fd)) return null;
-                        return currentMsg.getField(fd);
+                        Object fieldValue = currentMsg.getField(fd);
+
+                        // If the final field is an Any and we want to return the unpacked value
+                        if (fieldValue instanceof Any) {
+                            try {
+                                return anyHandler.unpack((Any) fieldValue);
+                            } catch (InvalidProtocolBufferException e) {
+                                // If unpacking fails, return the Any itself
+                                return fieldValue;
+                            }
+                        }
+                        return fieldValue;
                     } else {
                         if (fd.isRepeated() || fd.getJavaType() != FieldDescriptor.JavaType.MESSAGE) {
                             throw new MappingException("Path '" + path + "' attempts to traverse through non-message or repeated field '" + part + "'", rule);
@@ -218,7 +278,18 @@ public class ProtoFieldMapper {
                         if (!currentMsg.hasField(fd)) {
                             throw new MappingException("Path '" + path + "' is invalid because intermediate field '" + part + "' is not set.", rule);
                         }
-                        current = currentMsg.getField(fd);
+                        Object fieldValue = currentMsg.getField(fd);
+
+                        // If field is an Any, unpack it before continuing traversal
+                        if (fieldValue instanceof Any) {
+                            try {
+                                current = anyHandler.unpack((Any) fieldValue);
+                            } catch (InvalidProtocolBufferException e) {
+                                throw new MappingException("Failed to unpack Any field '" + part + "' during path traversal", e, rule);
+                            }
+                        } else {
+                            current = fieldValue;
+                        }
                     }
                 } else {
                     throw new MappingException("Cannot resolve path '" + path + "': tried to traverse through a non-message, non-struct value at '" + part + "'", rule);
@@ -244,7 +315,26 @@ public class ProtoFieldMapper {
                 }
             } else {
                 FieldDescriptor fd = findField(containerBuilder.getDescriptorForType(), fieldName, rule);
-                containerBuilder.setField(fd, value);
+
+                // Special handling for Any fields
+                if (fd.getMessageType() != null &&
+                    fd.getMessageType().getFullName().equals(Any.getDescriptor().getFullName())) {
+                    // The target field is an Any - pack the value
+                    if (value instanceof Any) {
+                        // Already an Any, use it directly
+                        containerBuilder.setField(fd, value);
+                    } else if (value instanceof Message) {
+                        // Pack the message into an Any
+                        Any packedAny = anyHandler.pack((Message) value);
+                        containerBuilder.setField(fd, packedAny);
+                    } else {
+                        throw new MappingException("Cannot pack non-Message value into Any field: " + fieldName, rule);
+                    }
+                } else {
+                    // Try to convert the value to the appropriate type if needed
+                    Object convertedValue = typeConverter.convertToFieldType(value, fd);
+                    containerBuilder.setField(fd, convertedValue);
+                }
             }
         }
 
