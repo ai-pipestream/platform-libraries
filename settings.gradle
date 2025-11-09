@@ -37,7 +37,7 @@ dependencyResolutionManagement {
 include 'bom'
 
 // devservices modules
-include 'devservices:runtime'
+include 'devservices:devservices'
 include 'devservices:deployment'
 
 // grpc modules

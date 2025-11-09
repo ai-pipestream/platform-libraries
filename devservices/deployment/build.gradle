@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     // Quarkus BOM version comes from parent platform BOM
-    implementation project(':devservices:runtime')
+    implementation project(':devservices:devservices')
     implementation 'io.quarkus:quarkus-arc-deployment'
 
     // Annotation processor for extension metadata (usually enabled by the plugin)
