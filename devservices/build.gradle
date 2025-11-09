@@ -1,6 +1,6 @@
 plugins {
-    id 'maven-publish'
-    id 'signing'
+    // Base plugin keeps lifecycle tasks (clean, assemble) without applying publishing to this aggregator project
+    id 'base'
 }
 
 // Group, version, and description inherited from root project
