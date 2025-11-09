@@ -38,7 +38,7 @@ include 'bom'
 
 // devservices modules
 include 'devservices:devservices'
-include 'devservices:deployment'
+include 'devservices:devservices-deployment'
 
 // grpc modules
 include 'grpc:grpc-stubs'

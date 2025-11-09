@@ -4,7 +4,7 @@ plugins {
 }
 
 quarkusExtension {
-    deploymentModule = 'deployment'
+    deploymentModule = 'devservices-deployment'
 }
 
 dependencies {
