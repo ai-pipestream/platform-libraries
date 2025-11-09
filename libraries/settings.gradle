@@ -3,18 +3,7 @@
 
 pluginManagement {
     repositories {
-        if (settings.providers.gradleProperty('usePublicRepos').getOrElse('false') == 'true') {
-            // Public repositories for CI/CD (GitHub Actions, etc.)
-            gradlePluginPortal()
-        } else {
-            // Private repositories for local development (default)
-            // Reposilite Gradle Plugin Portal proxy
-            maven {
-                url = uri('https://maven.rokkon.com/gradle-plugins/')
-            }
-            // Fallback to direct plugin portal
-            gradlePluginPortal()
-        }
+        gradlePluginPortal()
     }
 }
 
@@ -31,77 +20,22 @@ dependencyResolutionManagement {
     }
 
     repositories {
-        if (settings.providers.gradleProperty('usePublicRepos').getOrElse('false') == 'true') {
-            // Public repositories for CI/CD (GitHub Actions, etc.)
+        // Local first to allow testing unpublished BOMs during development
+        mavenLocal()
 
-            // Maven Local for testing (allows local BOM catalog during testing)
-            mavenLocal()
+        // Primary public repositories
+        mavenCentral()
 
-            // Maven Central - primary public repository
-            mavenCentral()
+        // Sonatype Snapshots for SNAPSHOT dependencies (e.g., BOM catalog)
+        maven {
+            url = uri('https://s01.oss.sonatype.org/content/repositories/snapshots/')
+            mavenContent { snapshotsOnly() }
+        }
 
-            // Maven Central Snapshots - for ai-pipestream SNAPSHOT dependencies
-            maven {
-                url = uri('https://central.sonatype.com/repository/maven-snapshots/')
-                mavenContent {
-                    snapshotsOnly()
-                }
-            }
-
-            // GitHub Packages - for ai-pipestream internal dependencies (BOM, etc.)
-            // GitHub Actions automatically provides GITHUB_ACTOR and GITHUB_TOKEN
-            maven {
-                url = uri('https://maven.pkg.github.com/ai-pipestream/*')
-                credentials {
-                    username = providers.environmentVariable('GITHUB_ACTOR').getOrElse('')
-                    password = providers.environmentVariable('GITHUB_TOKEN').getOrElse('')
-                }
-                content {
-                    includeGroup 'ai.pipestream'
-                }
-            }
-
-            // Apache Snapshots - for Apache pre-release artifacts
-            maven {
-                url = uri('https://repository.apache.org/snapshots/')
-                mavenContent {
-                    snapshotsOnly()
-                }
-                content {
-                    includeGroupByRegex "org\\\\.apache\\\\..*"
-                }
-            }
-        } else {
-            // Private repositories for local development (default)
-
-            // Use Maven Local for BOM catalog and other dependencies during development
-            mavenLocal()
-
-            // Maven Central Snapshots - for ai-pipestream SNAPSHOT dependencies (like BOM)
-            maven {
-                url = uri('https://central.sonatype.com/repository/maven-snapshots/')
-                mavenContent {
-                    snapshotsOnly()
-                }
-            }
-
-            // Reposilite as Maven Central proxy (primary)
-            maven {
-                url = uri('https://maven.rokkon.com/maven-central/')
-                allowInsecureProtocol = false
-            }
-
-            // Apache snapshots for Tika 4.x pre-release
-            maven {
-                url = uri('https://maven.rokkon.com/apache-snapshots/')
-                allowInsecureProtocol = false
-                content {
-                    includeGroupByRegex "org\\\\.apache\\\\.tika(\\\\..*)?"
-                }
-            }
-
-            // Fallback to Maven Central for edge cases
-            mavenCentral()
+        // Apache snapshots (optional; keep for pre-release artifacts like Tika)
+        maven {
+            url = uri('https://repository.apache.org/snapshots/')
+            mavenContent { snapshotsOnly() }
         }
     }
 }
