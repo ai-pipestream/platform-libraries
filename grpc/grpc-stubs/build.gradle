@@ -91,4 +91,8 @@ tasks.named('ideaModule') {
 // Fix task dependency warning
 tasks.named('javadoc') {
     dependsOn 'quarkusGenerateCode', 'jandex'
+    // Exclude interfaces referencing external/generated stubs not present on the Javadoc classpath
+    exclude('ai/pipestream/common/grpc/GrpcClientFactory.java')
+    // Do not fail the build if nothing is left to document in this module
+    failOnError = false
 }

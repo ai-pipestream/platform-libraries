@@ -41,6 +41,28 @@ subprojects {
         }
     }
 
+    // Harden Javadoc for all devservices subprojects
+    tasks.withType(Javadoc).configureEach { t ->
+        // Use only compile classpath to avoid generated resource outputs
+        t.classpath = files(sourceSets.main.compileClasspath)
+        def opts = t.options
+        opts.encoding = 'UTF-8'
+        opts.locale = 'en'
+        opts.charSet = 'UTF-8'
+        // Suppress missing docs warnings; keep other checks
+        opts.addStringOption('Xdoclint:-missing', '-quiet')
+        // External links for better navigation
+        [
+            'https://docs.oracle.com/en/java/javase/21/docs/api/',
+            'https://grpc.io/grpc-java/javadoc/',
+            'https://javadoc.io/doc/com.google.protobuf/protobuf-java/latest/',
+            'https://javadoc.io/doc/io.smallrye/smallrye-mutiny/latest/',
+            'https://javadoc.io/doc/io.quarkus/quarkus-core/latest/'
+        ].each { link -> opts.addStringOption('link', link) }
+        // Exclude non-API or internal packages
+        t.exclude('**/internal/**', '**/impl/**', '**/test/**')
+    }
+
     publishing {
         publications {
             maven(MavenPublication) {

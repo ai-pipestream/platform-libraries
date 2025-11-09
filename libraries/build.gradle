@@ -47,10 +47,26 @@ subprojects {
         }
     }
 
-    // Configure Javadoc to avoid consuming generated resources outputs (which may be produced by jandex)
-    tasks.withType(Javadoc).configureEach {
+    // Configure Javadoc deterministically and with external links
+    tasks.withType(Javadoc).configureEach { t ->
         // Only use the compile classpath for linking; exclude main outputs (resources)
-        classpath = files(sourceSets.main.compileClasspath)
+        t.classpath = files(sourceSets.main.compileClasspath)
+        def opts = t.options
+        opts.encoding = 'UTF-8'
+        opts.locale = 'en'
+        opts.charSet = 'UTF-8'
+        // Be quiet about missing descriptions but keep other doclint checks
+        opts.addStringOption('Xdoclint:-missing', '-quiet')
+        // External links for referenced APIs
+        [
+            'https://docs.oracle.com/en/java/javase/21/docs/api/',
+            'https://grpc.io/grpc-java/javadoc/',
+            'https://javadoc.io/doc/com.google.protobuf/protobuf-java/latest/',
+            'https://javadoc.io/doc/io.smallrye/smallrye-mutiny/latest/',
+            'https://javadoc.io/doc/io.quarkus/quarkus-core/latest/'
+        ].each { link -> opts.addStringOption('link', link) }
+        // Exclude non-public/internal implementation packages from docs
+        t.exclude('**/internal/**', '**/impl/**', '**/test/**')
     }
 
     publishing {
