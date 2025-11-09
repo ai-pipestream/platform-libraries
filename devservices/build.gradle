@@ -8,12 +8,7 @@ description = 'Quarkus Pipeline DevServices Extension'
 
 def javaVersion = 21
 
-allprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-}
+// Repositories inherited from root settings.gradle
 
 subprojects {
     apply plugin: 'java-library'

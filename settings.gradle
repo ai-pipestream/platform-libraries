@@ -33,15 +33,21 @@ dependencyResolutionManagement {
     }
 }
 
-// Include all subprojects
+// Include all subprojects - BOM first so it's available for other projects
 include 'bom'
+
+// grpc modules
 include 'grpc:grpc-google-descriptor'
 include 'grpc:grpc-stubs'
+
+// library modules
 include 'libraries:pipeline-api'
 include 'libraries:pipeline-commons'
 include 'libraries:dynamic-grpc'
 include 'libraries:dynamic-grpc-registration-clients'
 include 'libraries:data-util'
 include 'libraries:grpc-wiremock'
+
+// devservices modules
 include 'devservices:runtime'
 include 'devservices:deployment'
