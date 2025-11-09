@@ -167,6 +167,7 @@ java = { id = "java" }
 java-library = { id = "java-library" }
 java-platform = { id = "java-platform" }
 maven-publish = { id = "maven-publish" }
+quarkus-extension = { id = "io.quarkus.extension", version.ref = "quarkus" }
 
 [bundles]
 # Common Quarkus dependencies

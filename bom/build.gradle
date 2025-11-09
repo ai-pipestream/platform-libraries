@@ -37,8 +37,8 @@ dependencies {
         api("com.google.protobuf:protobuf-java-util") { version { strictly(libs.versions.protobuf.get()) } }
 
         // Internal ai.pipestream dependencies - all in coordinated release train
-        api("ai.pipestream:quarkus-pipeline-devservices:${version}")
-        api("ai.pipestream:quarkus-pipeline-devservices-deployment:${version}")
+        api("ai.pipestream:devservices:${version}")
+        api("ai.pipestream:devservices-deployment:${version}")
 
         // grpc modules - now part of release train
         api("ai.pipestream:grpc-stubs:${version}")
