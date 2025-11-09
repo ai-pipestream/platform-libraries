@@ -91,8 +91,20 @@ public class ProtoFieldMapper {
     }
 
     /**
+     * Creates a ProtoFieldMapper with auto-loading enabled.
+     * This will automatically load descriptors from the grpc-google-descriptor module
+     * if available on the classpath.
+     *
+     * @return A new ProtoFieldMapper with auto-loaded descriptors
+     */
+    public static ProtoFieldMapper withAutoLoad() {
+        DescriptorRegistry registry = new DescriptorRegistry(true);
+        return new ProtoFieldMapper(registry);
+    }
+
+    /**
      * Maps fields from a source message to a target message builder based on a list of rules.
-     * 
+     *
      * @param source The source protobuf message to read values from
      * @param targetBuilder The target message builder to write values to
      * @param rules List of mapping rules in string format

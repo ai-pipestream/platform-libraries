@@ -1,20 +1,31 @@
 package ai.pipestream.common.util;
 
+import ai.pipestream.common.util.descriptor.DescriptorLoader;
+import ai.pipestream.common.util.descriptor.GoogleDescriptorLoader;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.Message;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Registry for managing Protocol Buffer descriptors.
  * Provides lookup capabilities for descriptors by type name and caching.
+ * Supports loading descriptors from various sources via DescriptorLoader implementations.
  */
 public class DescriptorRegistry {
 
+    private static final Logger LOGGER = Logger.getLogger(DescriptorRegistry.class.getName());
+
     private final Map<String, Descriptor> descriptorsByFullName = new ConcurrentHashMap<>();
     private final Map<String, Descriptor> descriptorsBySimpleName = new ConcurrentHashMap<>();
+    private final List<DescriptorLoader> loaders = new ArrayList<>();
+    private boolean autoLoadAttempted = false;
 
     /**
      * Creates a new empty DescriptorRegistry.
@@ -22,6 +33,19 @@ public class DescriptorRegistry {
     public DescriptorRegistry() {
         // Register common well-known types by default
         registerWellKnownTypes();
+    }
+
+    /**
+     * Creates a DescriptorRegistry with automatic loading enabled.
+     * This will attempt to load descriptors from the default Google descriptor file.
+     *
+     * @param autoLoad Whether to automatically load descriptors
+     */
+    public DescriptorRegistry(boolean autoLoad) {
+        this();
+        if (autoLoad) {
+            autoLoadDescriptors();
+        }
     }
 
     /**
@@ -149,6 +173,69 @@ public class DescriptorRegistry {
     }
 
     /**
+     * Adds a descriptor loader to this registry.
+     *
+     * @param loader The loader to add
+     */
+    public void addLoader(DescriptorLoader loader) {
+        if (loader != null) {
+            loaders.add(loader);
+        }
+    }
+
+    /**
+     * Loads descriptors from a specific loader and registers them.
+     *
+     * @param loader The loader to use
+     * @return The number of descriptors loaded
+     * @throws DescriptorLoader.DescriptorLoadException if loading fails
+     */
+    public int loadFrom(DescriptorLoader loader) throws DescriptorLoader.DescriptorLoadException {
+        List<FileDescriptor> fileDescriptors = loader.loadDescriptors();
+        int count = 0;
+        for (FileDescriptor fd : fileDescriptors) {
+            registerFile(fd);
+            count += fd.getMessageTypes().size();
+        }
+        return count;
+    }
+
+    /**
+     * Attempts to automatically load descriptors from available loaders.
+     * By default, this tries to load from the Google descriptor file on the classpath.
+     * This method is idempotent - it will only attempt to load once.
+     */
+    public void autoLoadDescriptors() {
+        if (autoLoadAttempted) {
+            return;
+        }
+        autoLoadAttempted = true;
+
+        // If no loaders configured, add the default Google descriptor loader
+        if (loaders.isEmpty()) {
+            GoogleDescriptorLoader defaultLoader = new GoogleDescriptorLoader();
+            if (defaultLoader.isAvailable()) {
+                loaders.add(defaultLoader);
+            }
+        }
+
+        // Try to load from all available loaders
+        for (DescriptorLoader loader : loaders) {
+            if (loader.isAvailable()) {
+                try {
+                    int count = loadFrom(loader);
+                    LOGGER.log(Level.INFO,
+                        "Loaded {0} descriptors from {1}",
+                        new Object[]{count, loader.getLoaderType()});
+                } catch (DescriptorLoader.DescriptorLoadException e) {
+                    LOGGER.log(Level.WARNING,
+                        "Failed to load descriptors from " + loader.getLoaderType(), e);
+                }
+            }
+        }
+    }
+
+    /**
      * Creates a builder for fluently registering multiple descriptors.
      *
      * @return A new RegistryBuilder
@@ -193,6 +280,48 @@ public class DescriptorRegistry {
          */
         public RegistryBuilder registerFromMessage(Message message) {
             registry.registerFromMessage(message);
+            return this;
+        }
+
+        /**
+         * Adds a descriptor loader.
+         *
+         * @param loader The loader to add
+         * @return This builder
+         */
+        public RegistryBuilder addLoader(DescriptorLoader loader) {
+            registry.addLoader(loader);
+            return this;
+        }
+
+        /**
+         * Enables automatic loading of descriptors from available loaders.
+         *
+         * @return This builder
+         */
+        public RegistryBuilder withAutoLoad() {
+            registry.autoLoadDescriptors();
+            return this;
+        }
+
+        /**
+         * Adds the default Google descriptor loader.
+         *
+         * @return This builder
+         */
+        public RegistryBuilder withGoogleDescriptorLoader() {
+            registry.addLoader(new GoogleDescriptorLoader());
+            return this;
+        }
+
+        /**
+         * Adds a Google descriptor loader with a custom path.
+         *
+         * @param descriptorPath The path to the descriptor file
+         * @return This builder
+         */
+        public RegistryBuilder withGoogleDescriptorLoader(String descriptorPath) {
+            registry.addLoader(new GoogleDescriptorLoader(descriptorPath));
             return this;
         }
 
