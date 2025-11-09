@@ -1,0 +1,144 @@
+plugins {
+    alias(libs.plugins.java.platform)
+    alias(libs.plugins.maven.publish)
+    id 'version-catalog'
+    id 'signing'
+}
+
+// Group and version inherited from root project
+description = 'Pipeline BOM - Bill of Materials'
+
+javaPlatform {
+    allowDependencies()
+}
+
+dependencies {
+    api platform(libs.quarkus.bom)
+    api platform("io.grpc:grpc-bom:${libs.versions.grpc.get()}")
+    api platform("com.google.protobuf:protobuf-bom:${libs.versions.protobuf.get()}")
+
+    constraints {
+        api libs.opensearch.java
+        api libs.wiremock.standalone
+        api libs.wiremock.grpc.extension.standalone
+        api libs.apicurio.registry.java.sdk
+        api libs.apicurio.registry.common
+        api libs.apicurio.registry.protobuf.serde
+        api libs.commonmark
+        api libs.pdfbox
+        api libs.password4j
+        api libs.quarkus.mcp.server.sse
+        api libs.smallrye.reactive.messaging.in.memory
+
+        api("io.grpc:grpc-protobuf") { version { strictly(libs.versions.grpc.get()) } }
+        api("io.grpc:grpc-stub") { version { strictly(libs.versions.grpc.get()) } }
+        api("io.grpc:grpc-api") { version { strictly(libs.versions.grpc.get()) } }
+        api("com.google.protobuf:protobuf-java") { version { strictly(libs.versions.protobuf.get()) } }
+        api("com.google.protobuf:protobuf-java-util") { version { strictly(libs.versions.protobuf.get()) } }
+
+        // Internal ai.pipestream dependencies - all in coordinated release train
+        api("ai.pipestream:quarkus-pipeline-devservices:${version}")
+        api("ai.pipestream:quarkus-pipeline-devservices-deployment:${version}")
+
+        // grpc modules - now part of release train
+        api("ai.pipestream:grpc-stubs:${version}")
+        api("ai.pipestream:grpc-google-descriptor:${version}")
+
+        // library modules - all in release train
+        api("ai.pipestream:grpc-wiremock:${version}")
+        api("ai.pipestream:pipeline-api:${version}")
+        api("ai.pipestream:pipeline-commons:${version}")
+        api("ai.pipestream:dynamic-grpc:${version}")
+        api("ai.pipestream:dynamic-grpc-registration-clients:${version}")
+        api("ai.pipestream:data-util:${version}")
+    }
+}
+
+catalog {
+    versionCatalog {
+        from(files("gradle/libs.versions.toml"))
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.javaPlatform
+            artifactId = 'pipeline-bom'
+
+            pom {
+                name = 'Pipestream AI Pipeline BOM'
+                description = 'Bill of Materials for the Pipestream AI platform'
+                url = 'https://github.com/ai-pipestream/bom'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'krickert'
+                        name = 'Krickert'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/ai-pipestream/bom.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/bom.git'
+                    url = 'https://github.com/ai-pipestream/bom'
+                }
+            }
+        }
+
+        catalog(MavenPublication) {
+            from components.versionCatalog
+            artifactId = 'pipeline-bom-catalog'
+
+            pom {
+                name = 'Pipestream AI Pipeline BOM Catalog'
+                description = 'Version Catalog for the Pipestream AI platform'
+                url = 'https://github.com/ai-pipestream/bom'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'krickert'
+                        name = 'Krickert'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/ai-pipestream/bom.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/bom.git'
+                    url = 'https://github.com/ai-pipestream/bom'
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
+}
+
+// nmcp configuration inherited from root project
+
+signing {
+    def signingKey = System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+    if (signingKey && signingPassword) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.maven
+        sign publishing.publications.catalog
+    }
+}

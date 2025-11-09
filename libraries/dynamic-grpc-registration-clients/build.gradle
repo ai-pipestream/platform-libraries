@@ -1,0 +1,81 @@
+plugins {
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus)
+}
+
+
+version = '1.0.0-SNAPSHOT'
+
+
+
+dependencies {
+    implementation 'io.quarkus:quarkus-grpc'
+    // Library BOM provides gRPC code generation without server components
+    
+    // --- Core dependencies ---
+    implementation libs.grpc.services
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-vertx'
+    implementation project(':libraries:pipeline-commons')
+    
+    // --- Service Discovery ---
+    implementation 'io.quarkus:quarkus-smallrye-stork'
+    implementation 'io.smallrye.stork:stork-service-discovery-consul'
+    implementation 'io.smallrye.stork:stork-service-discovery-static-list'
+    implementation 'io.smallrye.stork:stork-configuration-generator'
+    
+    // --- Consul Client ---
+    implementation 'io.vertx:vertx-consul-client'
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
+    
+    // --- Caching ---
+    implementation 'io.quarkus:quarkus-cache'
+    
+    // --- Commons dependencies ---
+    implementation project(':grpc:grpc-stubs')
+    implementation project(':libraries:pipeline-api')
+    implementation project(':libraries:dynamic-grpc')
+    
+    // --- Testing ---
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
+    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation libs.assertj.core
+    testImplementation libs.awaitility
+    testImplementation libs.testcontainers.consul
+    testImplementation libs.testcontainers.junit
+    testImplementation project(':libraries:data-util')
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    systemProperty 'java.util.logging.manager', 'org.jboss.logmanager.LogManager'
+    useJUnitPlatform()
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+    dependsOn tasks.named('compileQuarkusGeneratedSourcesJava')
+}
+
+compileTestJava {
+}
+
+// Publishing configuration inherited from root project
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}
+
+description = 'Client helpers for platform registration using dynamic gRPC'
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}

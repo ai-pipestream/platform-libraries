@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package ai.pipestream.google.descriptor;
+
+// Import all Google well-known types to ensure their descriptors are included
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+option java_package = "ai.pipestream.google.descriptor";
+option java_outer_classname = "GoogleWellKnownTypesProto";
+
+// Dummy service to force generation of descriptors for all imported types
+// This service will never be implemented - it exists solely to ensure
+// the descriptor file includes all Google well-known types
+service GoogleWellKnownTypesDescriptorService {
+  // Reference to Empty
+  rpc GetEmpty(.google.protobuf.Empty) returns (.google.protobuf.Empty);
+
+  // Reference to Timestamp
+  rpc GetTimestamp(.google.protobuf.Timestamp) returns (.google.protobuf.Timestamp);
+
+  // Reference to Struct
+  rpc GetStruct(.google.protobuf.Struct) returns (.google.protobuf.Struct);
+
+  // Reference to Duration
+  rpc GetDuration(.google.protobuf.Duration) returns (.google.protobuf.Duration);
+
+  // Reference to Any
+  rpc GetAny(.google.protobuf.Any) returns (.google.protobuf.Any);
+
+  // Reference to FieldMask
+  rpc GetFieldMask(.google.protobuf.FieldMask) returns (.google.protobuf.FieldMask);
+
+  // Reference to wrappers
+  rpc GetStringValue(.google.protobuf.StringValue) returns (.google.protobuf.StringValue);
+}

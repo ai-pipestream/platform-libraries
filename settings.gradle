@@ -1,0 +1,47 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'platform-libraries'
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+
+        // Maven Central Snapshots for consuming published SNAPSHOTs
+        maven {
+            url = uri('https://central.sonatype.com/repository/maven-snapshots/')
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
+
+        // Apache Snapshots for Tika 4.x pre-release
+        maven {
+            url = uri('https://repository.apache.org/snapshots/')
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
+
+        maven {
+            url = uri('https://s01.oss.sonatype.org/content/groups/public/')
+        }
+    }
+}
+
+// Include all subprojects
+include 'bom'
+include 'grpc:grpc-google-descriptor'
+include 'grpc:grpc-stubs'
+include 'libraries:pipeline-api'
+include 'libraries:pipeline-commons'
+include 'libraries:dynamic-grpc'
+include 'libraries:dynamic-grpc-registration-clients'
+include 'libraries:data-util'
+include 'libraries:grpc-wiremock'
+include 'devservices:runtime'
+include 'devservices:deployment'

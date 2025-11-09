@@ -1,0 +1,30 @@
+name: Build and Publish Libraries
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # JDK 21 already in custom runner image - no setup needed!
+
+    - name: Build all libraries
+      run: ./gradlew build --no-daemon --build-cache -PuseInternalRepos=true
+      env:
+        CI_ENV: internal
+
+    - name: Publish all libraries to Gitea Maven
+      if: github.ref == 'refs/heads/main'
+      run: ./gradlew publishAllPublicationsToGiteaRepository -PuseInternalRepos=true
+      env:
+        CI_ENV: internal
+        GIT_USER: ${{ secrets.GIT_USER }}
+        GIT_PAT: ${{ secrets.GIT_PAT }}

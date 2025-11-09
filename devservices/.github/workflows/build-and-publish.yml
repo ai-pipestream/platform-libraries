@@ -1,0 +1,121 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Configure Maven settings for public repos
+        run: |
+          mkdir -p $HOME/.m2
+          cat > $HOME/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>\${env.GITHUB_ACTOR}</username>
+                <password>\${env.GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+            <mirrors>
+              <!-- Block internal Reposilite repositories -->
+              <mirror>
+                <id>block-reposilite</id>
+                <mirrorOf>reposilite-snapshots,reposilite-releases,reposilite-central</mirrorOf>
+                <url>https://repo.maven.apache.org/maven2</url>
+              </mirror>
+              <!-- Block internal Gitea repository -->
+              <mirror>
+                <id>block-gitea</id>
+                <mirrorOf>gitea</mirrorOf>
+                <url>https://repo.maven.apache.org/maven2</url>
+              </mirror>
+            </mirrors>
+            <profiles>
+              <profile>
+                <id>github</id>
+                <repositories>
+                  <!-- GitHub Packages for io.pipeline artifacts -->
+                  <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/io-pipeline/bom</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                  </repository>
+                  <!-- Maven Central -->
+                  <repository>
+                    <id>central</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </repository>
+                </repositories>
+                <pluginRepositories>
+                  <!-- Maven Central for plugins -->
+                  <pluginRepository>
+                    <id>central</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </pluginRepository>
+                </pluginRepositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>github</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+
+      - name: Build with Maven
+        run: ./mvnw clean compile test -DskipTests -s $HOME/.m2/settings.xml
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            */target/surefire-reports/
+            */target/failsafe-reports/
+
+      - name: Publish to GitHub Packages
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ./mvnw deploy \
+            -DskipTests \
+            -s $HOME/.m2/settings.xml \
+            -DaltDeploymentRepository=github::https://maven.pkg.github.com/io-pipeline/quarkus-pipeline-devservices
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

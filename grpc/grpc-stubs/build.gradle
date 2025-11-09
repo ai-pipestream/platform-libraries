@@ -1,0 +1,94 @@
+plugins {
+    id 'java-library'
+    id 'io.quarkus' version '3.28.2'
+    id 'org.kordamp.gradle.jandex' version '2.2.0'
+    id 'maven-publish'
+    id 'idea'  // Add IntelliJ IDEA plugin for IDE integration
+}
+
+dependencies {
+    implementation platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-grpc'
+    implementation 'io.quarkus:quarkus-arc'
+    // Pin protobuf/grpc versions from parent's libs.versions.toml (available via settings.gradle)
+    api libs.protobuf.java
+    api libs.grpc.protobuf
+    api libs.grpc.stub
+    testImplementation 'io.quarkus:quarkus-junit5'
+}
+
+// group and version inherited from root project
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+    // Suppress noisy test output
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "short"
+        showStandardStreams = false
+    }
+}
+
+// Suppress Quarkus build warnings
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xlint:-deprecation']
+}
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+// Include gRPC descriptor file in JAR for tooling consumption (e.g., WireMock)
+// COMMENTED OUT: We use grpc-google-descriptor instead which includes Google types
+//jar {
+//    from('build/classes/java/quarkus-generated-sources/grpc') {
+//        include 'services.dsc'
+//        into 'META-INF/grpc'
+//    }
+//}
+
+description = 'Generated gRPC stubs with Mutiny support and descriptor set'
+
+// Publishing configuration inherited from root project
+
+// Generate descriptor via build-time properties (no application.properties leak)
+quarkus {
+    quarkusBuildProperties.put("quarkus.generate-code.grpc.descriptor-set.generate", "true")
+    quarkusBuildProperties.put("quarkus.generate-code.grpc.descriptor-set.name", "services.dsc")
+    // Suppress noisy Quarkus build warnings
+    quarkusBuildProperties.put("quarkus.log.level", "ERROR")
+    quarkusBuildProperties.put("quarkus.log.category.\"io.quarkus.bootstrap\".level", "ERROR")
+}
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}
+
+// Configure IntelliJ IDEA to recognize Quarkus-generated gRPC sources
+idea {
+    module {
+        // Mark generated sources directory for IDE
+        sourceDirs += file('build/classes/java/quarkus-generated-sources/grpc')
+        generatedSourceDirs += file('build/classes/java/quarkus-generated-sources/grpc')
+    }
+}
+
+// Ensure generated sources are available before IntelliJ indexes
+tasks.named('ideaModule') {
+    dependsOn 'quarkusGenerateCode'
+}
+
+// Fix task dependency warning
+tasks.named('javadoc') {
+    dependsOn 'quarkusGenerateCode', 'jandex'
+}

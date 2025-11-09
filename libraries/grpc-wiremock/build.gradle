@@ -1,0 +1,78 @@
+plugins {
+    id 'java-library'
+    id 'io.quarkus' version '3.28.5'
+}
+
+dependencies {
+    // BOM inherited from root project
+
+    // Core WireMock with gRPC extension (versions from BOM)
+    api libs.wiremock.standalone
+    api libs.wiremock.grpc.extension.standalone
+
+    // Quarkus WireMock Dev Service
+    api libs.quarkus.wiremock
+
+    // Quarkus testing integration - API so consuming projects get them automatically
+    api libs.quarkus.junit5
+    api 'io.quarkus:quarkus-test-common'
+
+    // gRPC runtime for testing - API so consuming projects get them automatically
+    api 'io.quarkus:quarkus-grpc'
+    api 'io.quarkus:quarkus-mutiny'
+
+    // Depend on grpc modules from monorepo
+    api project(':grpc:grpc-stubs')
+    api project(':grpc:grpc-google-descriptor')
+
+    // Library dependencies (local projects)
+    testImplementation project(':libraries:dynamic-grpc-registration-clients')
+    testImplementation project(':libraries:dynamic-grpc')
+    testImplementation project(':libraries:pipeline-api')
+}
+
+// Version inherited from root project
+
+// Publishing configuration inherited from root project
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}
+
+description = 'Reusable gRPC testing framework with WireMock and service descriptor support'
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+// Extract gRPC descriptor from grpc-google-descriptor JAR to test resources
+// WireMock scans filesystem directories, not JAR files, so descriptor must be extracted
+task copyGrpcDescriptor(type: Copy) {
+    from {
+        def descriptorJar = configurations.runtimeClasspath.files.find { it.name.contains('grpc-google-descriptor') }
+        descriptorJar ? zipTree(descriptorJar) : files()
+    }
+    include 'META-INF/grpc/*.dsc'
+    into "$projectDir/src/test/resources"
+}
+
+processTestResources.dependsOn copyGrpcDescriptor

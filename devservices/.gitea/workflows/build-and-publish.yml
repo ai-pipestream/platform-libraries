@@ -1,0 +1,174 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Build with Maven
+        run: ./mvnw clean compile test -DskipTests
+        env:
+          REPOS_PAT: ${{ secrets.REPOS_PAT }}
+          GIT_USER: ${{ secrets.GIT_USER }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            */target/surefire-reports/
+            */target/failsafe-reports/
+
+      - name: Configure Maven settings
+        env:
+          REPOS_PAT: ${{ secrets.REPOS_PAT }}
+          GIT_USER: ${{ secrets.GIT_USER || 'krickert' }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+        run: |
+          mkdir -p $HOME/.m2
+          cat > $HOME/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>reposilite-snapshots</id>
+                <username>admin</username>
+                <password>${REPOS_PAT}</password>
+              </server>
+              <server>
+                <id>reposilite-releases</id>
+                <username>admin</username>
+                <password>${REPOS_PAT}</password>
+              </server>
+              <server>
+                <id>reposilite-central</id>
+                <username>admin</username>
+                <password>${REPOS_PAT}</password>
+              </server>
+              <server>
+                <id>reposilite</id>
+                <username>admin</username>
+                <password>${REPOS_PAT}</password>
+              </server>
+              <server>
+                <id>gitea</id>
+                <username>${GIT_USER}</username>
+                <password>${GIT_PAT}</password>
+              </server>
+              <server>
+                <id>github</id>
+                <username>${GITHUB_ACTOR}</username>
+                <password>${GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+            <profiles>
+              <profile>
+                <id>repos</id>
+                <repositories>
+                  <!-- Reposilite snapshots first - fast local network -->
+                  <repository>
+                    <id>reposilite-snapshots</id>
+                    <url>https://maven.rokkon.com/snapshots</url>
+                    <releases><enabled>false</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                  </repository>
+                  <!-- Reposilite releases - fast local network -->
+                  <repository>
+                    <id>reposilite-releases</id>
+                    <url>https://maven.rokkon.com/releases</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </repository>
+                  <!-- Reposilite maven-central proxy - fast local network, proxies Maven Central -->
+                  <repository>
+                    <id>reposilite-central</id>
+                    <url>https://maven.rokkon.com/maven-central</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </repository>
+                  <!-- Gitea Maven (backup) -->
+                  <repository>
+                    <id>gitea</id>
+                    <url>https://git.rokkon.com/api/packages/io-pipeline/maven</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                  </repository>
+                  <!-- Maven Central (fallback - Reposilite should proxy this) -->
+                  <repository>
+                    <id>central</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </repository>
+                </repositories>
+                <pluginRepositories>
+                  <!-- Reposilite maven-central proxy first for plugins - fast local network -->
+                  <pluginRepository>
+                    <id>reposilite-central</id>
+                    <url>https://maven.rokkon.com/maven-central</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </pluginRepository>
+                  <!-- Maven Central (fallback for plugins - Reposilite should proxy this) -->
+                  <pluginRepository>
+                    <id>central</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                  </pluginRepository>
+                </pluginRepositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>repos</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+
+      - name: Publish to Reposilite
+        if: gitea.ref == 'refs/heads/main'
+        run: |
+          # Maven will automatically use snapshotRepository for SNAPSHOT versions
+          # Settings.xml is already configured with credentials from previous step
+          ./mvnw deploy -DskipTests -s $HOME/.m2/settings.xml
+        env:
+          REPOS_PAT: ${{ secrets.REPOS_PAT }}
+
+      - name: Publish to Gitea Maven
+        if: gitea.ref == 'refs/heads/main'
+        run: |
+          ./mvnw deploy \
+            -DskipTests \
+            -s $HOME/.m2/settings.xml \
+            -DaltDeploymentRepository=gitea::default::https://git.rokkon.com/api/packages/io-pipeline/maven
+        env:
+          GIT_USER: ${{ secrets.GIT_USER }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}

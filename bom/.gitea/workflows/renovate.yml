@@ -1,0 +1,31 @@
+name: Renovate Dependencies
+
+on:
+  schedule:
+    # Run every Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # JDK 21 already in custom runner image - no setup needed!
+
+    - name: Check for dependency updates
+      run: |
+        echo "Checking for available dependency updates..."
+        ./gradlew dependencyUpdates --no-daemon
+
+    - name: Build with latest dependencies
+      run: ./gradlew clean build --no-daemon --build-cache
+
+    - name: Publish to Gitea Maven
+      run: ./gradlew publishAllPublicationsToGiteaRepository
+      env:
+        GIT_USER: ${{ secrets.GIT_USER }}
+        GIT_PAT: ${{ secrets.GIT_PAT }}

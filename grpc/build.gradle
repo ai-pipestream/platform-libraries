@@ -1,0 +1,72 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
+// Group and version inherited from root project
+
+// Configure publishing and signing for subprojects
+subprojects {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    plugins.withType(JavaPlugin) {
+        java {
+            withJavadocJar()
+            withSourcesJar()
+        }
+
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    from components.java
+
+                    pom {
+                        name = project.name
+                        description = project.description ?: "gRPC components for ai.pipestream"
+                        url = 'https://github.com/ai-pipestream/grpc'
+
+                        licenses {
+                            license {
+                                name = 'MIT License'
+                                url = 'https://opensource.org/licenses/MIT'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id = 'krickert'
+                                name = 'Krickert'
+                            }
+                        }
+
+                        scm {
+                            connection = 'scm:git:git://github.com/ai-pipestream/grpc.git'
+                            developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/grpc.git'
+                            url = 'https://github.com/ai-pipestream/grpc'
+                        }
+                    }
+                }
+            }
+
+            repositories {
+                mavenLocal()
+            }
+        }
+
+        signing {
+            def signingKey = System.getenv("GPG_SIGNING_KEY")
+            def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+            if (signingKey && signingPassword) {
+                useInMemoryPgpKeys(signingKey, signingPassword)
+                sign publishing.publications.maven
+            }
+        }
+    }
+}
+
+// nmcp configuration inherited from root project

@@ -1,0 +1,86 @@
+plugins {
+    id 'java-library'
+    id 'com.google.protobuf' version '0.9.4'
+    id 'maven-publish'
+}
+
+dependencies {
+    // Use BOM for version management
+    api platform('ai.pipestream:pipeline-bom:0.1.1')
+
+    // protobuf and gRPC dependencies (versions from BOM)
+    implementation libs.protobuf.java
+    implementation libs.grpc.protobuf
+    implementation libs.grpc.stub
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+}
+
+// group and version inherited from root project
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+// Reference proto files from grpc-stubs project
+sourceSets {
+    main {
+        proto {
+            srcDir "${project(':grpc:grpc-stubs').projectDir}/src/main/proto"
+        }
+    }
+}
+
+// Configure protobuf plugin to generate descriptor with Google well-known types
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
+    }
+
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}"
+        }
+    }
+
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {
+                outputSubDir = 'java'
+            }
+        }
+
+        all().each { task ->
+            task.generateDescriptorSet = true
+            task.descriptorSetOptions.includeImports = true
+            task.descriptorSetOptions.path = "$buildDir/resources/main/META-INF/grpc/services.dsc"
+        }
+    }
+}
+
+// Include gRPC descriptor file for Google well-known types in JAR
+jar {
+    dependsOn generateProto, generateTestProto
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from('build/resources/main') {
+        include 'META-INF/grpc/services.dsc'
+    }
+}
+
+// Fix task dependency warning
+tasks.named('javadoc') {
+    dependsOn generateProto, generateTestProto
+}
+
+description = 'Descriptor set for Google Protocol Buffer well-known types (Struct, Timestamp, Empty, etc.)'
+
+// Publishing configuration inherited from root project
+
+// Suppress enforced platform validation for publishing
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('enforced-platform')
+}

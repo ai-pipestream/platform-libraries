@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Quarkus BOM version comes from parent platform BOM
+    implementation project(':devservices:runtime')
+    implementation 'io.quarkus:quarkus-arc-deployment'
+
+    // Annotation processor for extension metadata (usually enabled by the plugin)
+    annotationProcessor 'io.quarkus:quarkus-extension-processor'
+
+    // Test dependencies
+    testImplementation 'io.quarkus:quarkus-junit5-internal'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.hamcrest:hamcrest'
+}

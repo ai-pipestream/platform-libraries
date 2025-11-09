@@ -1,0 +1,98 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
+// Group, version, and description inherited from root project
+description = 'Quarkus Pipeline DevServices Extension'
+
+def javaVersion = 21
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaVersion)
+        }
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    dependencies {
+        // Import BOM for dependency management
+        implementation platform("ai.pipestream:pipeline-bom:${rootProject.version}")
+
+        // Gradle 9 requires explicit JUnit Platform launcher on the test runtime classpath
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        testLogging {
+            events 'passed', 'failed', 'skipped'
+        }
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+
+                pom {
+                    name = project.name
+                    description = 'Quarkus extension for Pipeline DevServices'
+                    url = 'https://github.com/ai-pipestream/quarkus-pipeline-devservices'
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'krickert'
+                            name = 'Krickert'
+                        }
+                    }
+
+                    scm {
+                        connection = 'scm:git:git://github.com/ai-pipestream/quarkus-pipeline-devservices.git'
+                        developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/quarkus-pipeline-devservices.git'
+                        url = 'https://github.com/ai-pipestream/quarkus-pipeline-devservices'
+                    }
+                }
+            }
+        }
+
+        repositories {
+            mavenLocal()
+        }
+    }
+
+    signing {
+        def signingKey = System.getenv("GPG_SIGNING_KEY")
+        def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+        if (signingKey && signingPassword) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.maven
+        }
+    }
+}
+
+// nmcp configuration inherited from root project

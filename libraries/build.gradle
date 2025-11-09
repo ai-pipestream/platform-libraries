@@ -1,0 +1,105 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
+// Group and version inherited from root project
+
+// Apply common configuration to all library subprojects
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    // Common properties
+    group = rootProject.group
+    version = rootProject.version
+
+    // Java version
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    // Common dependencies (BOM provides version management)
+    dependencies {
+        // Use the BOM for version management
+        api platform("ai.pipestream:pipeline-bom:${rootProject.version}")
+
+        // Testing
+        testImplementation libs.quarkus.junit5
+        testImplementation libs.rest.assured
+        testImplementation libs.assertj.core
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters'
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat "full"
+        }
+    }
+
+    // Configure Javadoc to avoid consuming generated resources outputs (which may be produced by jandex)
+    tasks.withType(Javadoc).configureEach {
+        // Only use the compile classpath for linking; exclude main outputs (resources)
+        classpath = files(sourceSets.main.compileClasspath)
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+
+                pom {
+                    name = project.name
+                    description = project.description ?: "Pipeline library: ${project.name}"
+                    url = 'https://github.com/ai-pipestream/libraries'
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'krickert'
+                            name = 'Krickert'
+                        }
+                    }
+
+                    scm {
+                        connection = 'scm:git:git://github.com/ai-pipestream/libraries.git'
+                        developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/libraries.git'
+                        url = 'https://github.com/ai-pipestream/libraries'
+                    }
+                }
+            }
+        }
+
+        repositories {
+            mavenLocal()
+        }
+    }
+
+    signing {
+        def signingKey = System.getenv("GPG_SIGNING_KEY")
+        def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+        if (signingKey && signingPassword) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.maven
+        }
+    }
+}
+
+// nmcp configuration inherited from root project

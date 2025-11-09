@@ -1,0 +1,107 @@
+// Property to switch between private (Reposilite) and public repositories
+// Set -PusePublicRepos=true for GitHub Actions or other public CI systems
+
+pluginManagement {
+    repositories {
+        if (settings.providers.gradleProperty('usePublicRepos').getOrElse('false') == 'true') {
+            // Public repositories for CI/CD (GitHub Actions, etc.)
+            gradlePluginPortal()
+        } else {
+            // Private repositories for local development (default)
+            // Reposilite Gradle Plugin Portal proxy
+            maven {
+                url = uri('https://maven.rokkon.com/gradle-plugins/')
+            }
+            // Fallback to direct plugin portal
+            gradlePluginPortal()
+        }
+    }
+}
+
+rootProject.name = 'grpc-core'
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+
+    versionCatalogs {
+        libs {
+            // Import version catalog from published BOM
+            from("ai.pipestream:pipeline-bom-catalog:0.1.1")
+        }
+    }
+
+    repositories {
+        if (settings.providers.gradleProperty('usePublicRepos').getOrElse('false') == 'true') {
+            // Public repositories for CI/CD (GitHub Actions, etc.)
+
+            // Maven Local for testing (allows local BOM catalog during testing)
+            mavenLocal()
+
+            // Maven Central - primary public repository
+            mavenCentral()
+
+            // GitHub Packages - for ai-pipestream internal dependencies (BOM, etc.)
+            // GitHub Actions automatically provides GITHUB_ACTOR and GITHUB_TOKEN
+            maven {
+                url = uri('https://maven.pkg.github.com/ai-pipestream/*')
+                credentials {
+                    username = providers.environmentVariable('GITHUB_ACTOR').getOrElse('')
+                    password = providers.environmentVariable('GITHUB_TOKEN').getOrElse('')
+                }
+                content {
+                    includeGroup 'ai.pipestream'
+                }
+            }
+
+            // Apache Snapshots - for Apache pre-release artifacts
+            maven {
+                url = uri('https://repository.apache.org/snapshots/')
+                mavenContent {
+                    snapshotsOnly()
+                }
+                content {
+                    includeGroupByRegex "org\\.apache\\..*"
+                }
+            }
+
+            // Sonatype Snapshots - for other SNAPSHOT dependencies
+            maven {
+                url = uri('https://oss.sonatype.org/content/repositories/snapshots/')
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
+        } else {
+            // Private repositories for local development (default)
+
+            // Use Maven Local for BOM catalog during development
+            mavenLocal() {
+                content {
+                    includeGroupByRegex "ai\\.pipestream(\\..*)?"
+                }
+            }
+
+            // Reposilite as Maven Central proxy (primary)
+            maven {
+                url = uri('https://maven.rokkon.com/maven-central/')
+                allowInsecureProtocol = false
+            }
+
+            // Apache snapshots for Tika 4.x pre-release
+            maven {
+                url = uri('https://maven.rokkon.com/apache-snapshots/')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
+                }
+            }
+
+            // Fallback to Maven Central for edge cases (protoc executables, etc.)
+            mavenCentral()
+        }
+    }
+}
+
+include 'grpc-stubs'
+include 'grpc-google-descriptor'
+// grpc-wiremock moved to separate repo

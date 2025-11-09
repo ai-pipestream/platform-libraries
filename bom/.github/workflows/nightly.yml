@@ -1,0 +1,45 @@
+name: Nightly Snapshot Build
+
+on:
+  schedule:
+    # Run at 2 AM UTC (6 PM PST / 7 PM PDT) every day
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  nightly-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Configure Gradle wrapper for public distribution
+      run: |
+        sed -i 's|https\\://maven.rokkon.com/gradle-distributions/|https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew build --no-daemon --build-cache -PusePublicRepos=true
+
+    - name: Publish SNAPSHOT to GitHub Packages
+      run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --no-daemon -PusePublicRepos=true
+      env:
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Report build status
+      if: failure()
+      run: echo "Nightly build failed! Check the logs for details."
