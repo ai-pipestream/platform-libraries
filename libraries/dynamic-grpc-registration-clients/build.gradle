@@ -4,11 +4,6 @@ plugins {
     alias(libs.plugins.jandex)
 }
 
-
-version = '1.0.0-SNAPSHOT'
-
-
-
 dependencies {
     implementation 'io.quarkus:quarkus-grpc'
     // Library BOM provides gRPC code generation without server components

@@ -1,5 +1,5 @@
 [versions]
-quarkus = "3.29.0"
+quarkus = "3.29.2"
 jandex-plugin = "2.3.0"
 commons-lang3 = "3.19.0"
 opennlp-tools = "2.5.6.1"
