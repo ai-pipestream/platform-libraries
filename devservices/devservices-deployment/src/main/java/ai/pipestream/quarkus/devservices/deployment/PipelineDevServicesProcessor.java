@@ -1,10 +1,12 @@
 package ai.pipestream.quarkus.devservices.deployment;
 
 import ai.pipestream.quarkus.devservices.PipelineDevServicesConfig;
+import ai.pipestream.quarkus.devservices.runtime.ComposeDevServicesConfigBuilder;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.ConfigurationBuildItem;
+import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.StaticInitConfigBuilderBuildItem;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -17,6 +19,8 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 class PipelineDevServicesProcessor {
 
@@ -24,8 +28,12 @@ class PipelineDevServicesProcessor {
     private static final String FEATURE = "pipeline-devservices";
     private static final String COMPOSE_FILE_RESOURCE = "compose-devservices.yml";
     private static final String INIT_SCRIPT_RESOURCE = "init-mysql.sql";
-
     private static final String VERSION_FILE = ".version";
+    private static final String COMPOSE_CONFIG_PREFIX = "quarkus.compose.devservices.";
+    private static final String PIPELINE_CONFIG_PREFIX = "pipeline.devservices.";
+    private static final boolean DEFAULT_START_SERVICES = true;
+    private static final boolean DEFAULT_STOP_SERVICES = false;
+    private static final boolean DEFAULT_REUSE_PROJECT_FOR_TESTS = true;
 
     @BuildStep(onlyIf = IsDevelopment.class)
     FeatureBuildItem feature() {
@@ -35,16 +43,26 @@ class PipelineDevServicesProcessor {
         return new FeatureBuildItem(FEATURE);
     }
 
+    @BuildStep
+    StaticInitConfigBuilderBuildItem registerConfigBuilder() {
+        return new StaticInitConfigBuilderBuildItem(ComposeDevServicesConfigBuilder.class);
+    }
+
     @BuildStep(onlyIf = IsDevelopment.class)
-    FeatureBuildItem setupComposeFile(PipelineDevServicesConfig config,
-                                      ConfigurationBuildItem configuration) {
+    DevServicesResultBuildItem setupComposeFile(PipelineDevServicesConfig config) {
         LOG.info("========================================");
         LOG.info("Pipeline Dev Services extension - setupComposeFile build step executing");
         LOG.info("Extension enabled: " + config.enabled());
         LOG.info("========================================");
         if (!config.enabled()) {
             LOG.warn("Pipeline Dev Services extension is disabled");
-            return new FeatureBuildItem(FEATURE);
+            clearPipelineSystemProperties();
+            Map<String, String> disabledConfig = Map.of(COMPOSE_CONFIG_PREFIX + "enabled", Boolean.FALSE.toString());
+            return DevServicesResultBuildItem.discovered()
+                    .name(FEATURE)
+                    .description("Pipeline Dev Services disabled")
+                    .config(disabledConfig)
+                    .build();
         }
 
         try {
@@ -65,7 +83,12 @@ class PipelineDevServicesProcessor {
             
             if (composeResource == null) {
                 LOG.warn("Compose file not found in classpath: " + COMPOSE_FILE_RESOURCE);
-                return new FeatureBuildItem(FEATURE);
+                clearPipelineSystemProperties();
+                return DevServicesResultBuildItem.discovered()
+                        .name(FEATURE)
+                        .description("Pipeline Dev Services compose resource not found")
+                        .config(Map.of())
+                        .build();
             }
 
             // Calculate SHA of the resource
@@ -146,13 +169,27 @@ class PipelineDevServicesProcessor {
             LOG.info("  %dev.quarkus.compose.devservices.stop-services=false");
             LOG.info("  %dev.quarkus.compose.devservices.reuse-project-for-tests=true");
 
+            Map<String, String> composeConfig = new LinkedHashMap<>();
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "enabled", Boolean.toString(true));
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "files", composeFileAbsolutePath);
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "project-name", projectName);
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "start-services", Boolean.toString(DEFAULT_START_SERVICES));
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "stop-services", Boolean.toString(DEFAULT_STOP_SERVICES));
+            composeConfig.put(COMPOSE_CONFIG_PREFIX + "reuse-project-for-tests",
+                    Boolean.toString(DEFAULT_REUSE_PROJECT_FOR_TESTS));
 
+            applyPipelineSystemProperties(composeConfig);
+            updateComposeConfigBuilder(composeFileAbsolutePath, projectName);
+
+            return DevServicesResultBuildItem.discovered()
+                    .name(FEATURE)
+                    .description("Pipeline Dev Services compose provisioning")
+                    .config(composeConfig)
+                    .build();
         } catch (Exception e) {
             LOG.error("Failed to setup compose file", e);
             throw new RuntimeException("Failed to setup Pipeline Dev Services compose file", e);
         }
-
-        return new FeatureBuildItem(FEATURE + "-compose");
     }
 
     private void extractComposeFile(Path composeFile, Path versionFile, byte[] resourceBytes, String resourceSha) 
@@ -250,5 +287,43 @@ class PipelineDevServicesProcessor {
     }
 
     private record VersionInfo(String sha) {
+    }
+
+    private void applyPipelineSystemProperties(Map<String, String> composeConfig) {
+        composeConfig.forEach((key, value) -> {
+            if (key.startsWith(COMPOSE_CONFIG_PREFIX)) {
+                String pipelineKey = PIPELINE_CONFIG_PREFIX + key.substring(COMPOSE_CONFIG_PREFIX.length());
+                System.setProperty(pipelineKey, value);
+            }
+        });
+    }
+
+    private void clearPipelineSystemProperties() {
+        String[] keys = {
+                PIPELINE_CONFIG_PREFIX + "enabled",
+                PIPELINE_CONFIG_PREFIX + "files",
+                PIPELINE_CONFIG_PREFIX + "project-name",
+                PIPELINE_CONFIG_PREFIX + "start-services",
+                PIPELINE_CONFIG_PREFIX + "stop-services",
+                PIPELINE_CONFIG_PREFIX + "reuse-project-for-tests"
+        };
+        for (String key : keys) {
+            System.clearProperty(key);
+        }
+        ComposeDevServicesConfigBuilder.composeFiles = null;
+        ComposeDevServicesConfigBuilder.projectName = null;
+        ComposeDevServicesConfigBuilder.enabled = false;
+        ComposeDevServicesConfigBuilder.startServices = DEFAULT_START_SERVICES;
+        ComposeDevServicesConfigBuilder.stopServices = DEFAULT_STOP_SERVICES;
+        ComposeDevServicesConfigBuilder.reuseProjectForTests = DEFAULT_REUSE_PROJECT_FOR_TESTS;
+    }
+
+    private void updateComposeConfigBuilder(String composeFileAbsolutePath, String projectName) {
+        ComposeDevServicesConfigBuilder.composeFiles = composeFileAbsolutePath;
+        ComposeDevServicesConfigBuilder.projectName = projectName;
+        ComposeDevServicesConfigBuilder.enabled = true;
+        ComposeDevServicesConfigBuilder.startServices = DEFAULT_START_SERVICES;
+        ComposeDevServicesConfigBuilder.stopServices = DEFAULT_STOP_SERVICES;
+        ComposeDevServicesConfigBuilder.reuseProjectForTests = DEFAULT_REUSE_PROJECT_FOR_TESTS;
     }
 }

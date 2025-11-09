@@ -1,10 +1,10 @@
 package ai.pipestream.quarkus.devservices.deployment;
 
 import ai.pipestream.quarkus.devservices.PipelineDevServicesConfig;
-import io.quarkus.builder.item.BuildItem;
-import io.quarkus.deployment.annotations.BuildProducer;
+import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.RunTimeConfigurationDefaultBuildItem;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,7 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +25,23 @@ class PipelineDevServicesProcessorTest {
 
     private static final String COMPOSE_FILE = "compose-devservices.yml";
     private static final String VERSION_FILE = ".version";
+    private static final String FEATURE = "pipeline-devservices";
+    private static final String COMPOSE_PREFIX = "quarkus.compose.devservices.";
+
+    @BeforeEach
+    @AfterEach
+    void resetSystemProperties() {
+        String prefix = "pipeline.devservices.";
+        for (String key : List.of(
+                "enabled",
+                "files",
+                "project-name",
+                "start-services",
+                "stop-services",
+                "reuse-project-for-tests")) {
+            System.clearProperty(prefix + key);
+        }
+    }
 
     @Test
     void featureBuildItem_hasExpectedName() {
@@ -37,7 +56,7 @@ class PipelineDevServicesProcessorTest {
         TestConfig cfg = new TestConfig(true, temp.toString(), Optional.empty(), true, false);
 
         PipelineDevServicesProcessor p = new PipelineDevServicesProcessor();
-        p.setupComposeFile(cfg, null);
+        DevServicesResultBuildItem result = p.setupComposeFile(cfg);
 
         // Files are created
         Path composePath = temp.resolve(COMPOSE_FILE);
@@ -50,6 +69,19 @@ class PipelineDevServicesProcessorTest {
         String expectedSha = sha256(readResourceBytes());
         String versionContent = Files.readString(versionPath);
         assertTrue(versionContent.contains("sha=" + expectedSha));
+
+        assertNotNull(result);
+        assertEquals(FEATURE, result.getName());
+        Map<String, String> config = result.getConfig();
+        assertEquals("true", config.get(COMPOSE_PREFIX + "enabled"));
+        assertEquals(composePath.toAbsolutePath().toString(), config.get(COMPOSE_PREFIX + "files"));
+        assertEquals("pipeline-shared-devservices", config.get(COMPOSE_PREFIX + "project-name"));
+        assertEquals("true", config.get(COMPOSE_PREFIX + "start-services"));
+        assertEquals("false", config.get(COMPOSE_PREFIX + "stop-services"));
+        assertEquals("true", config.get(COMPOSE_PREFIX + "reuse-project-for-tests"));
+
+        assertEquals("true", System.getProperty("pipeline.devservices.enabled"));
+        assertEquals(composePath.toAbsolutePath().toString(), System.getProperty("pipeline.devservices.files"));
     }
 
     @Test
@@ -57,11 +89,16 @@ class PipelineDevServicesProcessorTest {
         TestConfig cfg = new TestConfig(false, temp.toString(), Optional.empty(), true, false);
 
         PipelineDevServicesProcessor p = new PipelineDevServicesProcessor();
-        p.setupComposeFile(cfg, null);
+        DevServicesResultBuildItem result = p.setupComposeFile(cfg);
 
         // No files created
         assertFalse(Files.exists(temp.resolve(COMPOSE_FILE)));
         assertFalse(Files.exists(temp.resolve(VERSION_FILE)));
+
+        assertNotNull(result);
+        assertEquals(FEATURE, result.getName());
+        assertEquals("false", result.getConfig().get(COMPOSE_PREFIX + "enabled"));
+        assertNull(System.getProperty("pipeline.devservices.enabled"));
     }
 
     @Test
@@ -70,11 +107,13 @@ class PipelineDevServicesProcessorTest {
 
         // Custom project name
         TestConfig cfgCustom = new TestConfig(true, temp.resolve("c1").toString(), Optional.of("custom"), true, false);
-        p.setupComposeFile(cfgCustom, null);
+        DevServicesResultBuildItem custom = p.setupComposeFile(cfgCustom);
+        assertEquals("custom", custom.getConfig().get(COMPOSE_PREFIX + "project-name"));
 
         // Blank should fallback to default
         TestConfig cfgBlank = new TestConfig(true, temp.resolve("c2").toString(), Optional.of(""), true, false);
-        p.setupComposeFile(cfgBlank, null);
+        DevServicesResultBuildItem blank = p.setupComposeFile(cfgBlank);
+        assertEquals("pipeline-shared-devservices", blank.getConfig().get(COMPOSE_PREFIX + "project-name"));
     }
 
     @Test
@@ -83,11 +122,11 @@ class PipelineDevServicesProcessorTest {
         TestConfig cfg = new TestConfig(true, temp.toString(), Optional.empty(), true, false);
 
         // First run extracts
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
         byte[] initial = Files.readAllBytes(temp.resolve(COMPOSE_FILE));
 
         // Second run should not change the file
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
         byte[] second = Files.readAllBytes(temp.resolve(COMPOSE_FILE));
         assertArrayEquals(initial, second);
     }
@@ -107,7 +146,7 @@ class PipelineDevServicesProcessorTest {
         Files.writeString(version, "sha=" + oldSha + "\n");
 
         // Run - should auto-update to resource bytes (no backup since not edited per recorded sha)
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
 
         byte[] now = Files.readAllBytes(compose);
         byte[] expected = readResourceBytes();
@@ -123,7 +162,7 @@ class PipelineDevServicesProcessorTest {
         TestConfig cfg = new TestConfig(true, temp.toString(), Optional.empty(), true, false);
 
         // Start from extracted
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
 
         Path compose = temp.resolve(COMPOSE_FILE);
         Path version = temp.resolve(VERSION_FILE);
@@ -135,7 +174,7 @@ class PipelineDevServicesProcessorTest {
         Files.writeString(compose, new String(original) + "# edited\n");
 
         // Run - should detect edit and skip auto-update
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
         byte[] after = Files.readAllBytes(compose);
         assertNotEquals(sha256(after), sha256(readResourceBytes()), "File should not be auto-updated");
         // version file should still contain old sha
@@ -148,7 +187,7 @@ class PipelineDevServicesProcessorTest {
         TestConfig cfg = new TestConfig(true, temp.toString(), Optional.empty(), true, true);
 
         // Extract first
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
         Path compose = temp.resolve(COMPOSE_FILE);
         Path version = temp.resolve(VERSION_FILE);
 
@@ -158,7 +197,7 @@ class PipelineDevServicesProcessorTest {
         Files.writeString(version, "sha=0000000000000000000000000000000000000000000000000000000000000000\n");
 
         // Run - should force update and create backup due to edit
-        p.setupComposeFile(cfg, null);
+        p.setupComposeFile(cfg);
 
         // New content equals resource
         assertArrayEquals(readResourceBytes(), Files.readAllBytes(compose));
@@ -184,7 +223,7 @@ class PipelineDevServicesProcessorTest {
         String resourceSha = sha256(readResourceBytes());
         Files.writeString(version, "sha=" + resourceSha + "\n");
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> p.setupComposeFile(cfg, null));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> p.setupComposeFile(cfg));
         assertTrue(ex.getMessage().contains("Failed to setup Pipeline Dev Services compose file"));
     }
 
@@ -206,23 +245,6 @@ class PipelineDevServicesProcessorTest {
             hex.append(h);
         }
         return hex.toString();
-    }
-
-    private static Map<String, String> toMap(List<RunTimeConfigurationDefaultBuildItem> items) {
-        Map<String, String> map = new HashMap<>();
-        for (RunTimeConfigurationDefaultBuildItem it : items) {
-            map.put(it.getKey(), it.getValue());
-        }
-        return map;
-    }
-
-    private static final class CollectingProducer<T extends BuildItem> implements BuildProducer<T> {
-        final List<T> items = new ArrayList<>();
-
-        @Override
-        public void produce(T item) {
-            items.add(item);
-        }
     }
 
     private record TestConfig(boolean enabled,

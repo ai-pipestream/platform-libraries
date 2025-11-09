@@ -1,6 +1,6 @@
 plugins {
-    id 'java-library'
-    id 'io.quarkus.extension' version '3.29.0'
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus.extension)
 }
 
 quarkusExtension {
