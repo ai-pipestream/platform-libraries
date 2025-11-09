@@ -42,3 +42,17 @@ tasks.register('publishAllToMavenLocal') {
     dependsOn subprojects.findAll { it.tasks.findByName('publishToMavenLocal') }
         .collect { it.tasks.named('publishToMavenLocal') }
 }
+
+subprojects {
+    tasks.withType(Javadoc).configureEach {
+        doFirst {
+            def linkIterator = options.links().iterator()
+            while (linkIterator.hasNext()) {
+                def linkValue = linkIterator.next()
+                if (linkValue?.toString()?.contains('https://javadoc.io/doc/io.quarkus/quarkus-core')) {
+                    linkIterator.remove()
+                }
+            }
+        }
+    }
+}

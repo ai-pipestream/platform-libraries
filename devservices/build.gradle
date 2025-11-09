@@ -53,11 +53,7 @@ subprojects {
         opts.addStringOption('Xdoclint:-missing', '-quiet')
         // External links for better navigation
         [
-            'https://docs.oracle.com/en/java/javase/21/docs/api/',
-            'https://grpc.io/grpc-java/javadoc/',
-            'https://javadoc.io/doc/com.google.protobuf/protobuf-java/latest/',
-            'https://javadoc.io/doc/io.smallrye/smallrye-mutiny/latest/',
-            'https://javadoc.io/doc/io.quarkus/quarkus-core/latest/'
+            'https://docs.oracle.com/en/java/javase/21/docs/api/'
         ].each { link -> opts.addStringOption('link', link) }
         // Exclude non-API or internal packages
         t.exclude('**/internal/**', '**/impl/**', '**/test/**')
