@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - 'make_streaming_calls'  # Publish alpha for this branch
+      - 'dev/**'                 # Publish alpha for dev branches
+      - 'feature/**'             # Publish alpha for feature branches
     paths:
       - 'grpc/grpc-stubs/src/main/proto/**'
       - 'grpc/node/**'
@@ -40,8 +43,41 @@ jobs:
         working-directory: grpc/node
         run: pnpm run build
 
+      - name: Determine version and tag
+        id: version
+        working-directory: grpc/node
+        run: |
+          BASE_VERSION=$(jq -r '.version' package.json | cut -d- -f1)
+
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            # Stable release on main branch
+            VERSION="${BASE_VERSION}"
+            TAG="latest"
+            echo "Publishing stable version: ${VERSION}"
+          else
+            # Alpha release on other branches
+            VERSION="${BASE_VERSION}-alpha.${{ github.run_number }}"
+            TAG="alpha"
+            echo "Publishing alpha version: ${VERSION}"
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Update package version
+        working-directory: grpc/node
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          echo "Updated package.json to version ${{ steps.version.outputs.version }}"
+
       - name: Publish to npm registry
         working-directory: grpc/node
-        run: pnpm publish --no-git-checks
+        run: pnpm publish --tag ${{ steps.version.outputs.tag }} --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "✅ Published @ai-pipestream/grpc-stubs@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "📦 NPM Tag: ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 https://www.npmjs.com/package/@ai-pipestream/grpc-stubs/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY

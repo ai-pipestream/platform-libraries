@@ -1,12 +1,102 @@
 {
   "name": "@ai-pipestream/grpc-stubs",
-  "version": "0.1.2",
+  "version": "0.1.6-alpha.20251110163341",
   "description": "Generated gRPC stubs for Pipestream AI platform",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    "./registration": {
+      "types": "./dist/registration/platform_registration_pb.d.ts",
+      "default": "./dist/registration/platform_registration_pb.ts"
+    },
+    "./health": {
+      "types": "./dist/grpc/health/v1/health_pb.d.ts",
+      "default": "./dist/grpc/health/v1/health_pb.ts"
+    },
+    "./connector": {
+      "types": "./dist/module/connectors/connector_intake_service_pb.d.ts",
+      "default": "./dist/module/connectors/connector_intake_service_pb.ts"
+    },
+    "./module": {
+      "types": "./dist/module/module_service_pb.d.ts",
+      "default": "./dist/module/module_service_pb.ts"
+    },
+    "./mapping": {
+      "types": "./dist/mapping-service/mapping_service_pb.d.ts",
+      "default": "./dist/mapping-service/mapping_service_pb.ts"
+    },
+    "./shell": {
+      "types": "./dist/frontend/shell_service_pb.d.ts",
+      "default": "./dist/frontend/shell_service_pb.ts"
+    },
+    "./upload": {
+      "types": "./dist/repository/filesystem/upload/upload_service_pb.d.ts",
+      "default": "./dist/repository/filesystem/upload/upload_service_pb.ts"
+    },
+    "./pipedoc": {
+      "types": "./dist/repository/pipedoc/pipedoc_service_pb.d.ts",
+      "default": "./dist/repository/pipedoc/pipedoc_service_pb.ts"
+    },
+    "./account": {
+      "types": "./dist/repository/account/account_service_pb.d.ts",
+      "default": "./dist/repository/account/account_service_pb.ts"
+    },
+    "./core": {
+      "types": "./dist/core/pipeline_core_types_pb.d.ts",
+      "default": "./dist/core/pipeline_core_types_pb.ts"
+    },
+    "./repository/filesystem": {
+      "types": "./dist/repository/filesystem/filesystem_service_pb.d.ts",
+      "default": "./dist/repository/filesystem/filesystem_service_pb.ts"
+    },
+    "./dist/registration/platform_registration_pb": {
+      "types": "./dist/registration/platform_registration_pb.d.ts",
+      "default": "./dist/registration/platform_registration_pb.ts"
+    },
+    "./dist/grpc/health/v1/health_pb": {
+      "types": "./dist/grpc/health/v1/health_pb.d.ts",
+      "default": "./dist/grpc/health/v1/health_pb.ts"
+    },
+    "./dist/module/connectors/connector_intake_service_pb": {
+      "types": "./dist/module/connectors/connector_intake_service_pb.d.ts",
+      "default": "./dist/module/connectors/connector_intake_service_pb.ts"
+    },
+    "./dist/module/module_service_pb": {
+      "types": "./dist/module/module_service_pb.d.ts",
+      "default": "./dist/module/module_service_pb.ts"
+    },
+    "./dist/mapping-service/mapping_service_pb": {
+      "types": "./dist/mapping-service/mapping_service_pb.d.ts",
+      "default": "./dist/mapping-service/mapping_service_pb.ts"
+    },
+    "./dist/frontend/shell_service_pb": {
+      "types": "./dist/frontend/shell_service_pb.d.ts",
+      "default": "./dist/frontend/shell_service_pb.ts"
+    },
+    "./dist/repository/filesystem/upload/upload_service_pb": {
+      "types": "./dist/repository/filesystem/upload/upload_service_pb.d.ts",
+      "default": "./dist/repository/filesystem/upload/upload_service_pb.ts"
+    },
+    "./dist/repository/pipedoc/pipedoc_service_pb": {
+      "types": "./dist/repository/pipedoc/pipedoc_service_pb.d.ts",
+      "default": "./dist/repository/pipedoc/pipedoc_service_pb.ts"
+    },
+    "./dist/repository/account/account_service_pb": {
+      "types": "./dist/repository/account/account_service_pb.d.ts",
+      "default": "./dist/repository/account/account_service_pb.ts"
+    },
+    "./dist/core/pipeline_core_types_pb": {
+      "types": "./dist/core/pipeline_core_types_pb.d.ts",
+      "default": "./dist/core/pipeline_core_types_pb.ts"
+    },
+    "./dist/repository/filesystem/filesystem_service_pb": {
+      "types": "./dist/repository/filesystem/filesystem_service_pb.d.ts",
+      "default": "./dist/repository/filesystem/filesystem_service_pb.ts"
+    }
+  },
   "files": [
-    "dist/**/*.js",
+    "dist/**/*.ts",
     "dist/**/*.d.ts"
   ],
   "scripts": {

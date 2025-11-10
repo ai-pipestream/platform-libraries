@@ -45,6 +45,12 @@ service PlatformRegistration {
   // list whenever any service is registered, unregistered, or changes
   // its health status.
   rpc WatchServices(google.protobuf.Empty) returns (stream ServiceListResponse);
+
+  // Watch for real-time updates to the list of all registered modules.
+  // The server will send an initial list, and then send a new full
+  // list whenever any module is registered, unregistered, or changes
+  // its health status.
+  rpc WatchModules(google.protobuf.Empty) returns (stream ModuleListResponse);
 }
 
 // Service registration request
