@@ -6,17 +6,16 @@ plugins {
 
 dependencies {
     implementation libs.quarkus.wiremock
-    
+
     // Quarkus dependencies
     implementation libs.bundles.quarkus.common
     implementation libs.quarkus.jackson
-    implementation 'io.quarkus:quarkus-smallrye-openapi'
+    implementation libs.quarkus.smallrye.openapi
     // Protobuf
     implementation libs.protobuf.java
 
     implementation project(':libraries:pipeline-api')
 
-    
     // Testing
     testImplementation libs.quarkus.junit5
 
@@ -39,11 +38,6 @@ test {
 }
 
 // Publishing configuration inherited from root project
-
-// Suppress enforced platform validation for publishing
-tasks.withType(GenerateModuleMetadata) {
-    suppressedValidationErrors.add('enforced-platform')
-}
 
 description = 'Shared utilities and gRPC client interfaces used across services and tests'
 

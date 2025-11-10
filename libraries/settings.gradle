@@ -9,33 +9,28 @@ pluginManagement {
 
 rootProject.name = 'pipeline-libraries'
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+if (gradle.parent == null) {
+    dependencyResolutionManagement {
+        repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
 
-    versionCatalogs {
-        libs {
-            // Import version catalog from published BOM
-            from("ai.pipestream:pipeline-bom-catalog:0.1.2-SNAPSHOT")
-        }
-    }
+        repositories {
+            // Local first to allow testing unpublished BOMs during development
+            mavenLocal()
 
-    repositories {
-        // Local first to allow testing unpublished BOMs during development
-        mavenLocal()
+            // Primary public repositories
+            mavenCentral()
 
-        // Primary public repositories
-        mavenCentral()
+            // Sonatype Snapshots for SNAPSHOT dependencies (e.g., BOM catalog)
+            maven {
+                url = uri('https://s01.oss.sonatype.org/content/repositories/snapshots/')
+                mavenContent { snapshotsOnly() }
+            }
 
-        // Sonatype Snapshots for SNAPSHOT dependencies (e.g., BOM catalog)
-        maven {
-            url = uri('https://s01.oss.sonatype.org/content/repositories/snapshots/')
-            mavenContent { snapshotsOnly() }
-        }
-
-        // Apache snapshots (optional; keep for pre-release artifacts like Tika)
-        maven {
-            url = uri('https://repository.apache.org/snapshots/')
-            mavenContent { snapshotsOnly() }
+            // Apache snapshots (optional; keep for pre-release artifacts like Tika)
+            maven {
+                url = uri('https://repository.apache.org/snapshots/')
+                mavenContent { snapshotsOnly() }
+            }
         }
     }
 }

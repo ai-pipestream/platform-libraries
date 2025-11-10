@@ -67,6 +67,13 @@ quarkus-logging-manager = { module = "io.quarkiverse.loggingmanager:quarkus-logg
 quarkus-consul-config = { module = "io.quarkus:quarkus-consul-config" }
 quarkus-micrometer = { module = "io.quarkus:quarkus-micrometer" }
 quarkus-micrometer-registry-prometheus = { module = "io.quarkus:quarkus-micrometer-registry-prometheus" }
+quarkus-rest-client = { module = "io.quarkus:quarkus-rest-client" }
+quarkus-vertx = { module = "io.quarkus:quarkus-vertx" }
+quarkus-cache = { module = "io.quarkus:quarkus-cache" }
+quarkus-smallrye-stork = { module = "io.quarkus:quarkus-smallrye-stork" }
+quarkus-hibernate-validator = { module = "io.quarkus:quarkus-hibernate-validator" }
+quarkus-smallrye-openapi = { module = "io.quarkus:quarkus-smallrye-openapi" }
+quarkus-test-common = { module = "io.quarkus:quarkus-test-common" }
 
 # gRPC and Protobuf
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
@@ -102,6 +109,7 @@ assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
+quarkus-junit5-mockito = { module = "io.quarkus:quarkus-junit5-mockito" }
 
 # OpenSearch
 opensearch-java = { module = "org.opensearch.client:opensearch-java", version.ref = "opensearch" }
@@ -159,6 +167,16 @@ password4j = { module = "com.password4j:password4j", version.ref = "password4j" 
 
 # SmallRye Reactive Messaging (for testing)
 smallrye-reactive-messaging-in-memory = { module = "io.smallrye.reactive:smallrye-reactive-messaging-in-memory", version.ref = "smallrye-reactive-messaging" }
+smallrye-mutiny-vertx-web-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-web-client" }
+smallrye-mutiny-vertx-consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client" }
+smallrye-stork-service-discovery-consul = { module = "io.smallrye.stork:stork-service-discovery-consul" }
+smallrye-stork-service-discovery-static-list = { module = "io.smallrye.stork:stork-service-discovery-static-list" }
+smallrye-stork-configuration-generator = { module = "io.smallrye.stork:stork-configuration-generator" }
+
+# Vert.x
+vertx-grpc-client = { module = "io.vertx:vertx-grpc-client" }
+vertx-web-client = { module = "io.vertx:vertx-web-client" }
+vertx-consul-client = { module = "io.vertx:vertx-consul-client" }
 
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }

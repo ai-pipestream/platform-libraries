@@ -8,27 +8,36 @@ rootProject.name = 'platform-libraries'
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
+        mavenLocal {
+            mavenContent {
+                releasesOnly()
+            }
+            content {
+                includeGroupByRegex "ai\\.pipestream(\\..*)?"
+            }
+        }
+
         mavenCentral()
 
-        // Maven Central Snapshots for consuming published SNAPSHOTs
+        // Maven Central snapshots host ai.pipestream SNAPSHOTs
         maven {
             url = uri('https://central.sonatype.com/repository/maven-snapshots/')
             mavenContent {
                 snapshotsOnly()
             }
-        }
-
-        // Apache Snapshots for Tika 4.x pre-release
-        maven {
-            url = uri('https://repository.apache.org/snapshots/')
-            mavenContent {
-                snapshotsOnly()
+            content {
+                includeGroupByRegex "ai\\.pipestream(\\..*)?"
             }
         }
 
-        maven {
-            url = uri('https://s01.oss.sonatype.org/content/groups/public/')
+        // Access Apache snapshots only for select dependencies when not on internal CI
+        if (System.getenv('CI_ENV') != 'internal') {
+            maven {
+                url = uri('https://repository.apache.org/content/repositories/snapshots/')
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
         }
     }
 }

@@ -12,9 +12,9 @@ dependencies {
     implementation(libs.bundles.quarkus.grpc)
     api project(':grpc:grpc-stubs')
     implementation libs.quarkus.jackson
-    implementation 'io.quarkus:quarkus-hibernate-validator'
-    implementation 'io.quarkus:quarkus-smallrye-openapi'
-    implementation 'io.quarkus:quarkus-cache'
+    implementation libs.quarkus.hibernate.validator
+    implementation libs.quarkus.smallrye.openapi
+    implementation libs.quarkus.cache
 
     // Testing
     testImplementation libs.quarkus.junit5

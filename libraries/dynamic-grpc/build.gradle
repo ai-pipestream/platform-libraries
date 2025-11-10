@@ -6,41 +6,41 @@ plugins {
 
 dependencies {
     // https://mvnrepository.com/artifact/io.vertx/vertx-grpc-client
-    api  'io.vertx:vertx-grpc-client'
-    implementation 'io.quarkus:quarkus-rest-client'
-    implementation 'io.quarkus:quarkus-grpc'
+    api libs.vertx.grpc.client
+    implementation libs.quarkus.rest.client
+    implementation libs.quarkus.grpc
     // Library BOM provides gRPC code generation without server components
     
     // --- Core dependencies ---
     implementation libs.grpc.services
-    implementation 'io.quarkus:quarkus-arc'
-    implementation 'io.quarkus:quarkus-vertx'
+    implementation libs.quarkus.arc
+    implementation libs.quarkus.vertx
     implementation project(':libraries:pipeline-commons')
-    implementation 'io.vertx:vertx-web-client'
-    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-web-client'
-    implementation 'io.quarkus:quarkus-rest'
+    implementation libs.vertx.web.client
+    implementation libs.smallrye.mutiny.vertx.web.client
+    implementation libs.quarkus.rest
     
     // --- Service Discovery ---
-    implementation 'io.quarkus:quarkus-smallrye-stork'
-    implementation 'io.smallrye.stork:stork-service-discovery-consul'
-    implementation 'io.smallrye.stork:stork-service-discovery-static-list'
-    implementation 'io.smallrye.stork:stork-configuration-generator'
+    implementation libs.quarkus.smallrye.stork
+    implementation libs.smallrye.stork.service.discovery.consul
+    implementation libs.smallrye.stork.service.discovery.static.list
+    implementation libs.smallrye.stork.configuration.generator
     
     // --- Consul Client ---
-    implementation 'io.vertx:vertx-consul-client'
-    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
+    implementation libs.vertx.consul.client
+    implementation libs.smallrye.mutiny.vertx.consul.client
     
     // --- Caching ---
-    implementation 'io.quarkus:quarkus-cache'
+    implementation libs.quarkus.cache
     
     // --- Commons dependencies ---
     implementation project(':grpc:grpc-stubs')
     implementation project(':libraries:pipeline-api')
     
     // --- Testing ---
-    testImplementation 'io.quarkus:quarkus-junit5'
-    testImplementation 'io.quarkus:quarkus-junit5-mockito'
-    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation libs.quarkus.junit5
+    testImplementation libs.quarkus.junit5.mockito
+    testImplementation libs.rest.assured
     testImplementation project(':libraries:grpc-wiremock')
     testImplementation libs.assertj.core
     testImplementation libs.awaitility
@@ -84,10 +84,4 @@ compileTestJava {
 tasks.withType(GenerateModuleMetadata) {
     suppressedValidationErrors.add('enforced-platform')
 }
-
 description = 'Dynamic gRPC discovery/channel management for Pipeline services'
-
-// Suppress enforced platform validation for publishing
-tasks.withType(GenerateModuleMetadata) {
-    suppressedValidationErrors.add('enforced-platform')
-}

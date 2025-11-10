@@ -1,6 +1,6 @@
 plugins {
-    id 'java-library'
-    id 'io.quarkus' version '3.28.5'
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus)
 }
 
 dependencies {
@@ -15,11 +15,11 @@ dependencies {
 
     // Quarkus testing integration - API so consuming projects get them automatically
     api libs.quarkus.junit5
-    api 'io.quarkus:quarkus-test-common'
+    api libs.quarkus.test.common
 
     // gRPC runtime for testing - API so consuming projects get them automatically
-    api 'io.quarkus:quarkus-grpc'
-    api 'io.quarkus:quarkus-mutiny'
+    api libs.quarkus.grpc
+    api libs.quarkus.mutiny
 
     // Depend on grpc modules from monorepo
     api project(':grpc:grpc-stubs')
@@ -41,11 +41,6 @@ tasks.withType(GenerateModuleMetadata) {
 }
 
 description = 'Reusable gRPC testing framework with WireMock and service descriptor support'
-
-// Suppress enforced platform validation for publishing
-tasks.withType(GenerateModuleMetadata) {
-    suppressedValidationErrors.add('enforced-platform')
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21

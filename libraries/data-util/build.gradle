@@ -6,29 +6,26 @@ plugins {
 
 dependencies {
     implementation libs.quarkus.wiremock
-    
+
     // Quarkus dependencies
     implementation libs.bundles.quarkus.common
     implementation libs.quarkus.jackson
-    
+
     // Internal dependencies
     implementation project(':grpc:grpc-stubs')
     implementation project(':libraries:pipeline-api')
     implementation project(':libraries:pipeline-commons')
-    
+
     // Protobuf
     implementation libs.protobuf.java
     implementation libs.protobuf.java.util
-    
-    // Google Guava (for Maps utility - version managed by Quarkus BOM)
+
+    // Google Guava (for Maps utility - version managed by BOM)
     implementation libs.guava
-    
-    // Google Guava (for Maps utility)
-    implementation libs.guava
-    
+
     // CSV parsing
     implementation libs.opencsv
-    
+
     // Testing
     testImplementation libs.quarkus.junit5
 }

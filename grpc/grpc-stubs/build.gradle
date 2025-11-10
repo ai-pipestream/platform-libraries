@@ -1,5 +1,5 @@
 plugins {
-    id 'java-library'
+    alias(libs.plugins.java.library)
     alias(libs.plugins.quarkus)
     alias(libs.plugins.jandex)
     id 'maven-publish'
@@ -7,14 +7,14 @@ plugins {
 }
 
 dependencies {
-    implementation platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-grpc'
-    implementation 'io.quarkus:quarkus-arc'
+    api platform("ai.pipestream:pipeline-bom:${rootProject.version}")
+    implementation libs.quarkus.grpc
+    implementation libs.quarkus.arc
     // Pin protobuf/grpc versions from parent's libs.versions.toml (available via settings.gradle)
     api libs.protobuf.java
     api libs.grpc.protobuf
     api libs.grpc.stub
-    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation libs.quarkus.junit5
 }
 
 // group and version inherited from root project
