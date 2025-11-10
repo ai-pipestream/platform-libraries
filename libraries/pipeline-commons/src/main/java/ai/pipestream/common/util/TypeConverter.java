@@ -101,7 +101,8 @@ public class TypeConverter {
         Descriptor descriptor = message.getDescriptorForType();
 
         for (FieldDescriptor field : descriptor.getFields()) {
-            if (!message.hasField(field) && !field.isRepeated()) {
+            // Skip non-repeated fields that are not set
+            if (!field.isRepeated() && !message.hasField(field)) {
                 continue;
             }
 

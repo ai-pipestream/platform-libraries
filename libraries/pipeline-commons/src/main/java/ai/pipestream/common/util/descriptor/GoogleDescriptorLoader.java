@@ -174,7 +174,7 @@ public class GoogleDescriptorLoader implements DescriptorLoader {
                     // Try to get it from the runtime
                     depDescriptor = tryGetWellKnownType(dependency);
                     if (depDescriptor == null) {
-                        throw new DescriptorValidationException(
+                        throw new IllegalStateException(
                             "Missing dependency: " + dependency + " for " + proto.getName());
                     }
                 }

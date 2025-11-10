@@ -228,7 +228,10 @@ public class MappingHelper {
             int maxDepth,
             Set<String> visited) {
 
-        SchemaNode node = new SchemaNode(descriptor.getName(), path, "MESSAGE");
+        // Extract the field name from the path (last component after the last dot)
+        String fieldName = path.isEmpty() ? descriptor.getName() : 
+            (path.contains(".") ? path.substring(path.lastIndexOf(".") + 1) : path);
+        SchemaNode node = new SchemaNode(fieldName, path, "MESSAGE");
 
         if (depth > maxDepth || visited.contains(descriptor.getFullName())) {
             return node;
