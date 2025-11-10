@@ -329,7 +329,7 @@ public class ProtoFieldMapper {
                 FieldDescriptor fd = findField(containerBuilder.getDescriptorForType(), fieldName, rule);
 
                 // Special handling for Any fields
-                if (fd.getMessageType() != null &&
+                if (fd.getJavaType() == FieldDescriptor.JavaType.MESSAGE &&
                     fd.getMessageType().getFullName().equals(Any.getDescriptor().getFullName())) {
                     // The target field is an Any - pack the value
                     if (value instanceof Any) {

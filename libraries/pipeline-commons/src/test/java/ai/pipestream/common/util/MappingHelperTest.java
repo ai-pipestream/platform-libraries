@@ -273,6 +273,7 @@ public class MappingHelperTest {
                 .setType(FieldDescriptorProto.Type.TYPE_STRING))
             .addField(FieldDescriptorProto.newBuilder()
                 .setName("custom_fields").setNumber(4)
+                .setType(FieldDescriptorProto.Type.TYPE_MESSAGE)
                 .setTypeName("google.protobuf.Struct"))
             .build();
 
@@ -284,6 +285,7 @@ public class MappingHelperTest {
                 .setType(FieldDescriptorProto.Type.TYPE_STRING))
             .addField(FieldDescriptorProto.newBuilder()
                 .setName("search_metadata").setNumber(2)
+                .setType(FieldDescriptorProto.Type.TYPE_MESSAGE)
                 .setTypeName(".ai.pipestream.test.SearchMetadata"))
             .build();
 
@@ -308,9 +310,11 @@ public class MappingHelperTest {
                 .setLabel(FieldDescriptorProto.Label.LABEL_REPEATED))
             .addField(FieldDescriptorProto.newBuilder()
                 .setName("custom_fields").setNumber(6)
+                .setType(FieldDescriptorProto.Type.TYPE_MESSAGE)
                 .setTypeName("google.protobuf.Struct"))
             .addField(FieldDescriptorProto.newBuilder()
                 .setName("created_at").setNumber(7)
+                .setType(FieldDescriptorProto.Type.TYPE_MESSAGE)
                 .setTypeName("google.protobuf.Timestamp"))
             .build();
 
