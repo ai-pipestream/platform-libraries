@@ -1,10 +1,8 @@
 package ai.pipestream.common.util;
 
-import ai.pipestream.common.util.ProtoFieldMapper;
 import com.google.protobuf.*;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
-import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ProtoFieldMapperEnhancedTest {
 
-    private static ProtoFieldMapper mapper;
+    private static ProtoFieldMapperImpl mapper;
     private static Descriptor pipeDocDescriptor;
     private static Descriptor searchMetadataDescriptor;
     private static Descriptor customMetadataDescriptor;
@@ -45,7 +43,7 @@ public class ProtoFieldMapperEnhancedTest {
         // Create mapper and register descriptors
         DescriptorRegistry registry = new DescriptorRegistry();
         registry.registerFile(fileDescriptor);
-        mapper = new ProtoFieldMapper(registry);
+        mapper = new ProtoFieldMapperImpl(registry);
     }
 
     @Test
@@ -297,7 +295,7 @@ public class ProtoFieldMapperEnhancedTest {
                 "search_metadata.title = structured_data.some_field"
         );
 
-        assertThrows(ProtoFieldMapper.MappingException.class, () -> {
+        assertThrows(ProtoFieldMapperImpl.MappingException.class, () -> {
             mapper.map(sourcePipeDoc, targetBuilder, rules);
         });
     }

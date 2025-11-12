@@ -1,6 +1,5 @@
 package ai.pipestream.common.util;
 
-import ai.pipestream.common.util.ProtoFieldMapper;
 import com.google.protobuf.*;
 import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
@@ -27,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ProtoFieldMapperTest {
 
-    private static ProtoFieldMapper mapper;
+    private static ProtoFieldMapperImpl mapper;
     private static Descriptor pipeStreamDescriptor;
     private static Descriptor pipeDocDescriptor;
 
     @BeforeAll
     static void setUp() throws DescriptorValidationException {
-        mapper = new ProtoFieldMapper();
+        mapper = new ProtoFieldMapperImpl();
         FileDescriptor fileDescriptor = createPipeDocFileDescriptor();
         pipeStreamDescriptor = fileDescriptor.findMessageTypeByName("PipeStream");
         pipeDocDescriptor = fileDescriptor.findMessageTypeByName("PipeDoc");
@@ -89,7 +88,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testSimpleAssignment() throws ProtoFieldMapper.MappingException {
+    void testSimpleAssignment() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeStreamDescriptor);
         List<String> rules = Collections.singletonList("stream_id = stream_id");
@@ -99,7 +98,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testDeepAssignment() throws ProtoFieldMapper.MappingException {
+    void testDeepAssignment() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeStreamDescriptor);
         List<String> rules = Collections.singletonList("document.id = document.id");
@@ -110,7 +109,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testAssignmentToStruct() throws ProtoFieldMapper.MappingException, InvalidProtocolBufferException {
+    void testAssignmentToStruct() throws ProtoFieldMapperImpl.MappingException, InvalidProtocolBufferException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Collections.singletonList("custom_data.original_title = document.title");
@@ -127,7 +126,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testAssignmentFromStruct() throws ProtoFieldMapper.MappingException {
+    void testAssignmentFromStruct() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Collections.singletonList("revision_id = document.custom_data.source_system");
@@ -137,7 +136,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testDeepAssignmentFromStruct() throws ProtoFieldMapper.MappingException {
+    void testDeepAssignmentFromStruct() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Collections.singletonList("document_type = document.custom_data.info.version");
@@ -147,7 +146,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testAppendToRepeatedField() throws ProtoFieldMapper.MappingException {
+    void testAppendToRepeatedField() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Collections.singletonList("keywords += document.keywords");
@@ -158,7 +157,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testAppendComplexMessage() throws ProtoFieldMapper.MappingException {
+    void testAppendComplexMessage() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Collections.singletonList("semantic_results += document.semantic_results");
@@ -171,7 +170,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testClearField() throws ProtoFieldMapper.MappingException {
+    void testClearField() throws ProtoFieldMapperImpl.MappingException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = source.toBuilder();
         List<String> rules = Collections.singletonList("-document.title");
@@ -183,7 +182,7 @@ public class ProtoFieldMapperTest {
     }
 
     @Test
-    void testLiteralAssignments() throws ProtoFieldMapper.MappingException, InvalidProtocolBufferException {
+    void testLiteralAssignments() throws ProtoFieldMapperImpl.MappingException, InvalidProtocolBufferException {
         Message source = createSourcePipeStream();
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeDocDescriptor);
         List<String> rules = Arrays.asList(
@@ -211,7 +210,7 @@ public class ProtoFieldMapperTest {
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeStreamDescriptor);
         List<String> rules = Collections.singletonList("stream_id = document.invalid_path");
         Executable execution = () -> mapper.map(source, targetBuilder, rules);
-        ProtoFieldMapper.MappingException e = assertThrows(ProtoFieldMapper.MappingException.class, execution);
+        ProtoFieldMapperImpl.MappingException e = assertThrows(ProtoFieldMapperImpl.MappingException.class, execution);
         assertTrue(e.getMessage().contains("Field 'invalid_path' not found in message 'PipeDoc'"));
     }
 
@@ -221,7 +220,7 @@ public class ProtoFieldMapperTest {
         Message.Builder targetBuilder = DynamicMessage.newBuilder(pipeStreamDescriptor);
         List<String> rules = Collections.singletonList("document.invalid_target = stream_id");
         Executable execution = () -> mapper.map(source, targetBuilder, rules);
-        ProtoFieldMapper.MappingException e = assertThrows(ProtoFieldMapper.MappingException.class, execution);
+        ProtoFieldMapperImpl.MappingException e = assertThrows(ProtoFieldMapperImpl.MappingException.class, execution);
         assertTrue(e.getMessage().contains("Field 'invalid_target' not found in message 'PipeDoc'"));
     }
 

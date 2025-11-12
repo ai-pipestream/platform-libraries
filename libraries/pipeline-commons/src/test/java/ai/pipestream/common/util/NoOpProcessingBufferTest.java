@@ -1,6 +1,5 @@
 package ai.pipestream.common.util;
 
-import ai.pipestream.common.util.NoOpProcessingBuffer;
 import ai.pipestream.data.v1.PipeDoc;
 import ai.pipestream.data.v1.SearchMetadata;
 import org.junit.jupiter.api.BeforeEach;

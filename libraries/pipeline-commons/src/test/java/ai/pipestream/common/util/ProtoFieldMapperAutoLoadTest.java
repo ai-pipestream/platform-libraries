@@ -11,7 +11,7 @@ public class ProtoFieldMapperAutoLoadTest {
 
     @Test
     void testWithAutoLoad() {
-        ProtoFieldMapper mapper = ProtoFieldMapper.withAutoLoad();
+        ProtoFieldMapper mapper = ProtoFieldMapperImpl.withAutoLoad();
         assertNotNull(mapper);
         assertNotNull(mapper.getDescriptorRegistry());
         assertNotNull(mapper.getAnyHandler());
@@ -28,7 +28,7 @@ public class ProtoFieldMapperAutoLoadTest {
 
     @Test
     void testDefaultConstructor() {
-        ProtoFieldMapper mapper = new ProtoFieldMapper();
+        ProtoFieldMapperImpl mapper = new ProtoFieldMapperImpl();
         assertNotNull(mapper);
         assertNotNull(mapper.getDescriptorRegistry());
 
@@ -40,7 +40,7 @@ public class ProtoFieldMapperAutoLoadTest {
     @Test
     void testCustomRegistryConstructor() {
         DescriptorRegistry customRegistry = new DescriptorRegistry(true);
-        ProtoFieldMapper mapper = new ProtoFieldMapper(customRegistry);
+        ProtoFieldMapperImpl mapper = new ProtoFieldMapperImpl(customRegistry);
 
         assertNotNull(mapper);
         assertSame(customRegistry, mapper.getDescriptorRegistry());
@@ -48,7 +48,7 @@ public class ProtoFieldMapperAutoLoadTest {
 
     @Test
     void testDescriptorRegistryAccessors() {
-        ProtoFieldMapper mapper = ProtoFieldMapper.withAutoLoad();
+        ProtoFieldMapper mapper = ProtoFieldMapperImpl.withAutoLoad();
 
         DescriptorRegistry registry = mapper.getDescriptorRegistry();
         assertNotNull(registry);
