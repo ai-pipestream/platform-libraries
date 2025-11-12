@@ -26,37 +26,43 @@ public class TypeConverter {
      * @throws IllegalArgumentException if the type cannot be converted
      */
     public Value toValue(Object value) {
-        if (value == null) {
-            return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
-        }
-        if (value instanceof String) {
-            return Value.newBuilder().setStringValue((String) value).build();
-        }
-        if (value instanceof Double) {
-            return Value.newBuilder().setNumberValue((Double) value).build();
-        }
-        if (value instanceof Float) {
-            return Value.newBuilder().setNumberValue(((Float) value).doubleValue()).build();
-        }
-        if (value instanceof Number) {
-            return Value.newBuilder().setNumberValue(((Number) value).doubleValue()).build();
-        }
-        if (value instanceof Boolean) {
-            return Value.newBuilder().setBoolValue((Boolean) value).build();
-        }
-        if (value instanceof Struct) {
-            return Value.newBuilder().setStructValue((Struct) value).build();
-        }
-        if (value instanceof List) {
-            ListValue.Builder listBuilder = ListValue.newBuilder();
-            for (Object item : (List<?>) value) {
-                listBuilder.addValues(toValue(item));
+        switch (value) {
+            case null -> {
+                return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
             }
-            return Value.newBuilder().setListValue(listBuilder).build();
-        }
-        if (value instanceof Message) {
-            // Convert message to Struct representation
-            return Value.newBuilder().setStructValue(messageToStruct((Message) value)).build();
+            case String s -> {
+                return Value.newBuilder().setStringValue(s).build();
+            }
+            case Double v -> {
+                return Value.newBuilder().setNumberValue(v).build();
+            }
+            case Float v -> {
+                return Value.newBuilder().setNumberValue(v.doubleValue()).build();
+            }
+            case Number number -> {
+                return Value.newBuilder().setNumberValue(number.doubleValue()).build();
+            }
+            case Boolean b -> {
+                return Value.newBuilder().setBoolValue(b).build();
+            }
+            case Struct struct -> {
+                return Value.newBuilder().setStructValue(struct).build();
+            }
+            //noinspection rawtypes
+            case List list -> {
+                ListValue.Builder listBuilder = ListValue.newBuilder();
+                for (Object item : list) {
+                    listBuilder.addValues(toValue(item));
+                }
+                return Value.newBuilder().setListValue(listBuilder).build();
+            }
+            case Message message -> {
+                // Convert message to Struct representation
+                return Value.newBuilder().setStructValue(messageToStruct(message)).build();
+                // Convert message to Struct representation
+            }
+            default -> {
+            }
         }
         throw new IllegalArgumentException("Cannot convert type to Value: " + value.getClass().getName());
     }
@@ -71,22 +77,16 @@ public class TypeConverter {
         if (value == null || value.getKindCase() == Value.KindCase.NULL_VALUE) {
             return null;
         }
-        switch (value.getKindCase()) {
-            case NUMBER_VALUE:
-                return value.getNumberValue();
-            case STRING_VALUE:
-                return value.getStringValue();
-            case BOOL_VALUE:
-                return value.getBoolValue();
-            case STRUCT_VALUE:
-                return value.getStructValue();
-            case LIST_VALUE:
-                return value.getListValue().getValuesList().stream()
-                        .map(this::fromValue)
-                        .collect(Collectors.toList());
-            default:
-                return null;
-        }
+        return switch (value.getKindCase()) {
+            case NUMBER_VALUE -> value.getNumberValue();
+            case STRING_VALUE -> value.getStringValue();
+            case BOOL_VALUE -> value.getBoolValue();
+            case STRUCT_VALUE -> value.getStructValue();
+            case LIST_VALUE -> value.getListValue().getValuesList().stream()
+                    .map(this::fromValue)
+                    .collect(Collectors.toList());
+            default -> null;
+        };
     }
 
     /**
@@ -171,31 +171,27 @@ public class TypeConverter {
             return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
         }
 
-        switch (field.getJavaType()) {
-            case INT:
-            case LONG:
-            case FLOAT:
-            case DOUBLE:
-                return Value.newBuilder().setNumberValue(((Number) value).doubleValue()).build();
-            case BOOLEAN:
-                return Value.newBuilder().setBoolValue((Boolean) value).build();
-            case STRING:
-                return Value.newBuilder().setStringValue((String) value).build();
-            case ENUM:
+        return switch (field.getJavaType()) {
+            case INT, LONG, FLOAT, DOUBLE -> Value.newBuilder().setNumberValue(((Number) value).doubleValue()).build();
+            case BOOLEAN -> Value.newBuilder().setBoolValue((Boolean) value).build();
+            case STRING -> Value.newBuilder().setStringValue((String) value).build();
+            case ENUM -> {
                 EnumValueDescriptor enumValue = (EnumValueDescriptor) value;
-                return Value.newBuilder().setStringValue(enumValue.getName()).build();
-            case MESSAGE:
+                yield Value.newBuilder().setStringValue(enumValue.getName()).build();
+            }
+            case MESSAGE -> {
                 if (value instanceof Struct) {
-                    return Value.newBuilder().setStructValue((Struct) value).build();
+                    yield Value.newBuilder().setStructValue((Struct) value).build();
                 }
-                return Value.newBuilder().setStructValue(messageToStruct((Message) value)).build();
-            case BYTE_STRING:
+                yield Value.newBuilder().setStructValue(messageToStruct((Message) value)).build();
+            }
+            case BYTE_STRING -> {
                 // Encode as base64 string
                 ByteString bytes = (ByteString) value;
-                return Value.newBuilder().setStringValue(bytes.toStringUtf8()).build();
-            default:
-                return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
-        }
+                yield Value.newBuilder().setStringValue(bytes.toStringUtf8()).build();
+            }
+            default -> Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
+        };
     }
 
     /**
@@ -304,27 +300,17 @@ public class TypeConverter {
      * @return true if the value can be assigned to the field without conversion
      */
     private boolean isCompatibleType(Object value, FieldDescriptor field) {
-        switch (field.getJavaType()) {
-            case INT:
-                return value instanceof Integer;
-            case LONG:
-                return value instanceof Long;
-            case FLOAT:
-                return value instanceof Float;
-            case DOUBLE:
-                return value instanceof Double;
-            case BOOLEAN:
-                return value instanceof Boolean;
-            case STRING:
-                return value instanceof String;
-            case BYTE_STRING:
-                return value instanceof ByteString;
-            case ENUM:
-                return value instanceof EnumValueDescriptor;
-            case MESSAGE:
-                return value instanceof Message;
-            default:
-                return false;
-        }
+        return switch (field.getJavaType()) {
+            case INT -> value instanceof Integer;
+            case LONG -> value instanceof Long;
+            case FLOAT -> value instanceof Float;
+            case DOUBLE -> value instanceof Double;
+            case BOOLEAN -> value instanceof Boolean;
+            case STRING -> value instanceof String;
+            case BYTE_STRING -> value instanceof ByteString;
+            case ENUM -> value instanceof EnumValueDescriptor;
+            case MESSAGE -> value instanceof Message;
+            default -> false;
+        };
     }
 }

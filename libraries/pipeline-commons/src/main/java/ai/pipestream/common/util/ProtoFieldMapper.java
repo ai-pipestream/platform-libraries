@@ -1,20 +1,12 @@
 package ai.pipestream.common.util;
 
 import com.google.protobuf.*;
-import com.google.protobuf.DescriptorProtos.DescriptorProto;
-import com.google.protobuf.DescriptorProtos.EnumDescriptorProto;
-import com.google.protobuf.DescriptorProtos.EnumValueDescriptorProto;
-import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
-import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,7 +24,7 @@ import java.util.stream.Collectors;
  * <li>Handles literal value assignments (strings, booleans, numbers, null).</li>
  * <li>Correctly reads from and writes to `google.protobuf.Struct` fields, handling type conversions from DynamicMessage.</li>
  * <li>Supports `google.protobuf.Any` field packing and unpacking.</li>
- * <li>Provides type conversion between different proto types.</li>
+ * <li>Provides type conversion between different protobuf types.</li>
  * <li>Manages proto descriptors for dynamic message handling.</li>
  * <li>Provides precise error messages for invalid paths.</li>
  * </ul>
@@ -231,9 +223,17 @@ public class ProtoFieldMapper {
         public Object getValue(MessageOrBuilder root, String path, String rule) throws MappingException {
             String trimmedPath = path.trim();
             // Check for literals first.
-            if (trimmedPath.equals("null")) return null;
-            if (trimmedPath.equals("true")) return true;
-            if (trimmedPath.equals("false")) return false;
+            switch (trimmedPath) {
+                case "null" -> {
+                    return null;
+                }
+                case "true" -> {
+                    return true;
+                }
+                case "false" -> {
+                    return false;
+                }
+            }
             if (trimmedPath.startsWith("\"") && trimmedPath.endsWith("\"")) {
                 if (trimmedPath.length() == 1) throw new MappingException("Invalid empty quoted string literal", rule);
                 return trimmedPath.substring(1, trimmedPath.length() - 1);
@@ -255,57 +255,58 @@ public class ProtoFieldMapper {
 
             for (int i = 0; i < parts.length; i++) {
                 String part = parts[i];
-                if (current == null) {
-                    throw new MappingException("Cannot resolve path '" + path + "': intermediate value is null at segment '" + part + "'", rule);
-                }
-
-                if (current instanceof Struct) {
-                    Value value = ((Struct) current).getFieldsMap().get(part);
-                    if (value == null && i < parts.length - 1) {
-                        throw new MappingException("Cannot resolve path '" + path + "': key '" + part + "' not found in struct", rule);
+                switch (current) {
+                    case null ->
+                            throw new MappingException("Cannot resolve path '" + path + "': intermediate value is null at segment '" + part + "'", rule);
+                    case Struct struct -> {
+                        Value value = struct.getFieldsMap().get(part);
+                        if (value == null && i < parts.length - 1) {
+                            throw new MappingException("Cannot resolve path '" + path + "': key '" + part + "' not found in struct", rule);
+                        }
+                        current = unwrapValue(value);
                     }
-                    current = unwrapValue(value);
-                } else if (current instanceof MessageOrBuilder) {
-                    MessageOrBuilder currentMsg = (MessageOrBuilder) current;
-                    FieldDescriptor fd = findField(currentMsg.getDescriptorForType(), part, rule);
+                    case MessageOrBuilder currentMsg -> {
+                        FieldDescriptor fd = findField(currentMsg.getDescriptorForType(), part, rule);
 
-                    if (i == parts.length - 1) {
-                        if (!fd.isRepeated() && !currentMsg.hasField(fd)) return null;
-                        Object fieldValue = currentMsg.getField(fd);
+                        if (i == parts.length - 1) {
+                            if (!fd.isRepeated() && !currentMsg.hasField(fd)) return null;
+                            Object fieldValue = currentMsg.getField(fd);
 
-                        // If the final field is an Any and we want to return the unpacked value
-                        if (fieldValue instanceof Any) {
-                            try {
-                                return anyHandler.unpack((Any) fieldValue);
-                            } catch (InvalidProtocolBufferException e) {
-                                // If unpacking fails, return the Any itself
-                                return fieldValue;
+                            // If the final field is an Any and we want to return the unpacked value
+                            if (fieldValue instanceof Any) {
+                                try {
+                                    return anyHandler.unpack((Any) fieldValue);
+                                } catch (InvalidProtocolBufferException e) {
+                                    // If unpacking fails, return the Any itself
+                                    return fieldValue;
+                                }
                             }
-                        }
-                        return fieldValue;
-                    } else {
-                        if (fd.isRepeated() || fd.getJavaType() != FieldDescriptor.JavaType.MESSAGE) {
-                            throw new MappingException("Path '" + path + "' attempts to traverse through non-message or repeated field '" + part + "'", rule);
-                        }
-                        if (!currentMsg.hasField(fd)) {
-                            throw new MappingException("Path '" + path + "' is invalid because intermediate field '" + part + "' is not set.", rule);
-                        }
-                        Object fieldValue = currentMsg.getField(fd);
-
-                        // If field is an Any, unpack it before continuing traversal
-                        if (fieldValue instanceof Any) {
-                            try {
-                                current = anyHandler.unpack((Any) fieldValue);
-                            } catch (InvalidProtocolBufferException e) {
-                                throw new MappingException("Failed to unpack Any field '" + part + "' during path traversal", e, rule);
-                            }
+                            return fieldValue;
                         } else {
-                            current = fieldValue;
+                            if (fd.isRepeated() || fd.getJavaType() != FieldDescriptor.JavaType.MESSAGE) {
+                                throw new MappingException("Path '" + path + "' attempts to traverse through non-message or repeated field '" + part + "'", rule);
+                            }
+                            if (!currentMsg.hasField(fd)) {
+                                throw new MappingException("Path '" + path + "' is invalid because intermediate field '" + part + "' is not set.", rule);
+                            }
+                            Object fieldValue = currentMsg.getField(fd);
+
+                            // If field is an Any, unpack it before continuing traversal
+                            if (fieldValue instanceof Any) {
+                                try {
+                                    current = anyHandler.unpack((Any) fieldValue);
+                                } catch (InvalidProtocolBufferException e) {
+                                    throw new MappingException("Failed to unpack Any field '" + part + "' during path traversal", e, rule);
+                                }
+                            } else {
+                                current = fieldValue;
+                            }
                         }
                     }
-                } else {
-                    throw new MappingException("Cannot resolve path '" + path + "': tried to traverse through a non-message, non-struct value at '" + part + "'", rule);
+                    default ->
+                            throw new MappingException("Cannot resolve path '" + path + "': tried to traverse through a non-message, non-struct value at '" + part + "'", rule);
                 }
+
             }
             return current;
         }
@@ -352,10 +353,9 @@ public class ProtoFieldMapper {
 
         public void appendValue(Message.Builder root, String path, Object value, String rule) throws MappingException {
             PathResolutionResult result = resolvePathToFinalContainer(root, path, rule);
-            if (!(result.container instanceof Message.Builder)) {
+            if (!(result.container instanceof Message.Builder finalBuilder)) {
                 throw new MappingException("Cannot append to a non-message field", rule);
             }
-            Message.Builder finalBuilder = (Message.Builder) result.container;
             FieldDescriptor fd = findField(finalBuilder.getDescriptorForType(), result.finalPathPart, rule);
 
             if (!fd.isRepeated()) {
@@ -423,31 +423,51 @@ public class ProtoFieldMapper {
         }
 
         private Value wrapValue(Object value) {
-            if (value == null) return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
-            if (value instanceof String) return Value.newBuilder().setStringValue((String) value).build();
-            if (value instanceof Double) return Value.newBuilder().setNumberValue((Double) value).build();
-            if (value instanceof Float) return Value.newBuilder().setNumberValue(((Float) value).doubleValue()).build();
-            if (value instanceof Number) return Value.newBuilder().setNumberValue(((Number) value).doubleValue()).build();
-            if (value instanceof Boolean) return Value.newBuilder().setBoolValue((Boolean) value).build();
-            if (value instanceof Struct) return Value.newBuilder().setStructValue((Struct) value).build();
-            if (value instanceof List) {
-                ListValue.Builder listBuilder = ListValue.newBuilder();
-                for(Object item : (List<?>) value) listBuilder.addValues(wrapValue(item));
-                return Value.newBuilder().setListValue(listBuilder).build();
+            switch (value) {
+                case null -> {
+                    return Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build();
+                }
+                case String s -> {
+                    return Value.newBuilder().setStringValue(s).build();
+                }
+                case Double v -> {
+                    return Value.newBuilder().setNumberValue(v).build();
+                }
+                case Float v -> {
+                    return Value.newBuilder().setNumberValue(v.doubleValue()).build();
+                }
+                case Number number -> {
+                    return Value.newBuilder().setNumberValue(number.doubleValue()).build();
+                }
+                case Boolean b -> {
+                    return Value.newBuilder().setBoolValue(b).build();
+                }
+                case Struct struct -> {
+                    return Value.newBuilder().setStructValue(struct).build();
+                }
+                //noinspection rawtypes
+                case List list -> {
+                    ListValue.Builder listBuilder = ListValue.newBuilder();
+                    for (Object item : list) listBuilder.addValues(wrapValue(item));
+                    return Value.newBuilder().setListValue(listBuilder).build();
+                }
+                default -> {
+                }
             }
             throw new IllegalArgumentException("Cannot wrap unsupported type to Protobuf Value: " + value.getClass().getName());
         }
 
         private Object unwrapValue(Value value) {
             if (value == null || value.getKindCase() == Value.KindCase.NULL_VALUE) return null;
-            switch(value.getKindCase()) {
-                case NUMBER_VALUE: return value.getNumberValue();
-                case STRING_VALUE: return value.getStringValue();
-                case BOOL_VALUE: return value.getBoolValue();
-                case STRUCT_VALUE: return value.getStructValue();
-                case LIST_VALUE: return value.getListValue().getValuesList().stream().map(this::unwrapValue).collect(Collectors.toList());
-                default: return null;
-            }
+            return switch (value.getKindCase()) {
+                case NUMBER_VALUE -> value.getNumberValue();
+                case STRING_VALUE -> value.getStringValue();
+                case BOOL_VALUE -> value.getBoolValue();
+                case STRUCT_VALUE -> value.getStructValue();
+                case LIST_VALUE ->
+                        value.getListValue().getValuesList().stream().map(this::unwrapValue).collect(Collectors.toList());
+                default -> null;
+            };
         }
     }
 }
