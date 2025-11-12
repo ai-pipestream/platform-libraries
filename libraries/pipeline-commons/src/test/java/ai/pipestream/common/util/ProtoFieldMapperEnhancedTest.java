@@ -277,7 +277,7 @@ public class ProtoFieldMapperEnhancedTest {
     }
 
     @Test
-    void testAnyFieldWithInvalidType() throws Exception {
+    void testAnyFieldWithInvalidType() {
         // Create an Any with a type not in the registry
         Any unknownAny = Any.newBuilder()
                 .setTypeUrl("type.googleapis.com/unknown.UnknownType")
@@ -295,9 +295,8 @@ public class ProtoFieldMapperEnhancedTest {
                 "search_metadata.title = structured_data.some_field"
         );
 
-        assertThrows(ProtoFieldMapperImpl.MappingException.class, () -> {
-            mapper.map(sourcePipeDoc, targetBuilder, rules);
-        });
+        assertThrows(ProtoFieldMapperImpl.MappingException.class, () ->
+                mapper.map(sourcePipeDoc, targetBuilder, rules));
     }
 
     /**
