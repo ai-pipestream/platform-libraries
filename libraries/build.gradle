@@ -47,7 +47,7 @@ subprojects {
         }
     }
 
-    // Configure Javadoc deterministically and with external links
+    // Configure Javadoc deterministically and without mandatory external links (offline-safe by default)
     tasks.withType(Javadoc).configureEach { t ->
         // Only use the compile classpath for linking; exclude main outputs (resources)
         t.classpath = files(sourceSets.main.compileClasspath)
@@ -57,10 +57,13 @@ subprojects {
         opts.charSet = 'UTF-8'
         // Be quiet about missing descriptions but keep other doclint checks
         opts.addStringOption('Xdoclint:-missing', '-quiet')
-        // External links for referenced APIs
-        [
-            'https://docs.oracle.com/en/java/javase/21/docs/api/'
-        ].each { link -> opts.addStringOption('link', link) }
+        // External links (disabled by default to avoid network in closed environments).
+        // Enable explicitly via: -PenableExternalJavadocLinks
+        if (project.hasProperty('enableExternalJavadocLinks')) {
+            [
+                'https://docs.oracle.com/en/java/javase/21/docs/api/'
+            ].each { link -> opts.addStringOption('link', link) }
+        }
         // Exclude non-public/internal implementation packages from docs
         t.exclude('**/internal/**', '**/impl/**', '**/test/**')
     }
