@@ -25,8 +25,8 @@ subprojects {
 
     // Common dependencies
     dependencies {
-        // Note: BOM not needed here - version catalog (libs) provides dependency management
-        // Individual projects can add it if needed
+        // Quarkus BOM for all libraries (non-enforced to allow custom gRPC/protobuf versions)
+        implementation platform(libs.quarkus.bom)
 
         // Testing
         testImplementation libs.quarkus.junit5

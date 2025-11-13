@@ -27,8 +27,8 @@ subprojects {
     }
 
     dependencies {
-        // Note: BOM not needed here - version catalog (libs) provides dependency management
-        // Individual projects can add it if needed
+        // Quarkus BOM for all devservices (non-enforced to allow custom versions)
+        implementation platform(libs.quarkus.bom)
 
         // Gradle 9 requires explicit JUnit Platform launcher on the test runtime classpath
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
