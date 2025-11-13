@@ -47,18 +47,16 @@ jobs:
         id: version
         working-directory: grpc/node
         run: |
-          BASE_VERSION=$(jq -r '.version' package.json | cut -d- -f1)
+          VERSION=$(jq -r '.version' package.json)
 
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            # Stable release on main branch
-            VERSION="${BASE_VERSION}"
+          if [[ $VERSION == *-* ]]; then
+            # Pre-release version
+            TAG="alpha"
+            echo "Publishing pre-release version: ${VERSION}"
+          else
+            # Stable release
             TAG="latest"
             echo "Publishing stable version: ${VERSION}"
-          else
-            # Alpha release on other branches
-            VERSION="${BASE_VERSION}-alpha.${{ github.run_number }}"
-            TAG="alpha"
-            echo "Publishing alpha version: ${VERSION}"
           fi
 
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
