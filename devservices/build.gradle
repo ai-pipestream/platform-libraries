@@ -67,7 +67,7 @@ subprojects {
                 pom {
                     name = project.name
                     description = 'Quarkus extension for Pipeline DevServices'
-                    url = 'https://github.com/ai-pipestream/quarkus-pipeline-devservices'
+                    url = 'https://github.com/ai-pipestream/platform-libraries'
 
                     licenses {
                         license {
@@ -84,9 +84,9 @@ subprojects {
                     }
 
                     scm {
-                        connection = 'scm:git:git://github.com/ai-pipestream/quarkus-pipeline-devservices.git'
-                        developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/quarkus-pipeline-devservices.git'
-                        url = 'https://github.com/ai-pipestream/quarkus-pipeline-devservices'
+                        connection = 'scm:git:https://github.com/ai-pipestream/platform-libraries.git'
+                        developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/platform-libraries.git'
+                        url = 'https://github.com/ai-pipestream/platform-libraries'
                     }
                 }
             }

@@ -73,7 +73,7 @@ subprojects {
                 pom {
                     name = project.name
                     description = project.description ?: "Pipeline library: ${project.name}"
-                    url = 'https://github.com/ai-pipestream/libraries'
+                    url = 'https://github.com/ai-pipestream/platform-libraries'
 
                     licenses {
                         license {
@@ -90,9 +90,9 @@ subprojects {
                     }
 
                     scm {
-                        connection = 'scm:git:git://github.com/ai-pipestream/libraries.git'
-                        developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/libraries.git'
-                        url = 'https://github.com/ai-pipestream/libraries'
+                    connection = 'scm:git:https://github.com/ai-pipestream/platform-libraries.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/platform-libraries.git'
+                    url = 'https://github.com/ai-pipestream/platform-libraries'
                     }
                 }
             }

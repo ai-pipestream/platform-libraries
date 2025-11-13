@@ -42,7 +42,7 @@ subprojects {
                     pom {
                         name = project.name
                         description = project.description ?: "gRPC components for ai.pipestream"
-                        url = 'https://github.com/ai-pipestream/grpc'
+                        url = 'https://github.com/ai-pipestream/platform-libraries'
 
                         licenses {
                             license {
@@ -59,9 +59,9 @@ subprojects {
                         }
 
                         scm {
-                            connection = 'scm:git:git://github.com/ai-pipestream/grpc.git'
-                            developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/grpc.git'
-                            url = 'https://github.com/ai-pipestream/grpc'
+                            connection = 'scm:git:https://github.com/ai-pipestream/platform-libraries.git'
+                            developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/platform-libraries.git'
+                            url = 'https://github.com/ai-pipestream/platform-libraries'
                         }
                     }
                 }
