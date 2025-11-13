@@ -5,8 +5,7 @@ plugins {
 }
 
 dependencies {
-    // Use BOM for version management
-    api platform('ai.pipestream:pipeline-bom:0.1.1')
+    // Note: BOM not needed - version catalog (libs) provides dependency management
 
     // protobuf and gRPC dependencies (versions from BOM)
     implementation libs.protobuf.java
