@@ -8,12 +8,11 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["dist/**/*.ts"],
-  "exclude": ["node_modules", "dist/**/*.d.ts"]
+  "exclude": ["node_modules", "dist/**/*.d.ts", "dist/**/*.js"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@ai-pipestream/grpc-stubs",
-  "version": "0.1.6-alpha.20251110163341",
+  "version": "0.1.6-alpha.20251110170250",
   "description": "Generated gRPC stubs for Pipestream AI platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,96 +8,98 @@
   "exports": {
     "./registration": {
       "types": "./dist/registration/platform_registration_pb.d.ts",
-      "default": "./dist/registration/platform_registration_pb.ts"
+      "default": "./dist/registration/platform_registration_pb.js"
     },
     "./health": {
       "types": "./dist/grpc/health/v1/health_pb.d.ts",
-      "default": "./dist/grpc/health/v1/health_pb.ts"
+      "default": "./dist/grpc/health/v1/health_pb.js"
     },
     "./connector": {
       "types": "./dist/module/connectors/connector_intake_service_pb.d.ts",
-      "default": "./dist/module/connectors/connector_intake_service_pb.ts"
+      "default": "./dist/module/connectors/connector_intake_service_pb.js"
     },
     "./module": {
       "types": "./dist/module/module_service_pb.d.ts",
-      "default": "./dist/module/module_service_pb.ts"
+      "default": "./dist/module/module_service_pb.js"
     },
     "./mapping": {
       "types": "./dist/mapping-service/mapping_service_pb.d.ts",
-      "default": "./dist/mapping-service/mapping_service_pb.ts"
+      "default": "./dist/mapping-service/mapping_service_pb.js"
     },
     "./shell": {
       "types": "./dist/frontend/shell_service_pb.d.ts",
-      "default": "./dist/frontend/shell_service_pb.ts"
+      "default": "./dist/frontend/shell_service_pb.js"
     },
     "./upload": {
       "types": "./dist/repository/filesystem/upload/upload_service_pb.d.ts",
-      "default": "./dist/repository/filesystem/upload/upload_service_pb.ts"
+      "default": "./dist/repository/filesystem/upload/upload_service_pb.js"
     },
     "./pipedoc": {
       "types": "./dist/repository/pipedoc/pipedoc_service_pb.d.ts",
-      "default": "./dist/repository/pipedoc/pipedoc_service_pb.ts"
+      "default": "./dist/repository/pipedoc/pipedoc_service_pb.js"
     },
     "./account": {
       "types": "./dist/repository/account/account_service_pb.d.ts",
-      "default": "./dist/repository/account/account_service_pb.ts"
+      "default": "./dist/repository/account/account_service_pb.js"
     },
     "./core": {
       "types": "./dist/core/pipeline_core_types_pb.d.ts",
-      "default": "./dist/core/pipeline_core_types_pb.ts"
+      "default": "./dist/core/pipeline_core_types_pb.js"
     },
     "./repository/filesystem": {
       "types": "./dist/repository/filesystem/filesystem_service_pb.d.ts",
-      "default": "./dist/repository/filesystem/filesystem_service_pb.ts"
+      "default": "./dist/repository/filesystem/filesystem_service_pb.js"
     },
     "./dist/registration/platform_registration_pb": {
       "types": "./dist/registration/platform_registration_pb.d.ts",
-      "default": "./dist/registration/platform_registration_pb.ts"
+      "default": "./dist/registration/platform_registration_pb.js"
     },
     "./dist/grpc/health/v1/health_pb": {
       "types": "./dist/grpc/health/v1/health_pb.d.ts",
-      "default": "./dist/grpc/health/v1/health_pb.ts"
+      "default": "./dist/grpc/health/v1/health_pb.js"
     },
     "./dist/module/connectors/connector_intake_service_pb": {
       "types": "./dist/module/connectors/connector_intake_service_pb.d.ts",
-      "default": "./dist/module/connectors/connector_intake_service_pb.ts"
+      "default": "./dist/module/connectors/connector_intake_service_pb.js"
     },
     "./dist/module/module_service_pb": {
       "types": "./dist/module/module_service_pb.d.ts",
-      "default": "./dist/module/module_service_pb.ts"
+      "default": "./dist/module/module_service_pb.js"
     },
     "./dist/mapping-service/mapping_service_pb": {
       "types": "./dist/mapping-service/mapping_service_pb.d.ts",
-      "default": "./dist/mapping-service/mapping_service_pb.ts"
+      "default": "./dist/mapping-service/mapping_service_pb.js"
     },
     "./dist/frontend/shell_service_pb": {
       "types": "./dist/frontend/shell_service_pb.d.ts",
-      "default": "./dist/frontend/shell_service_pb.ts"
+      "default": "./dist/frontend/shell_service_pb.js"
     },
     "./dist/repository/filesystem/upload/upload_service_pb": {
       "types": "./dist/repository/filesystem/upload/upload_service_pb.d.ts",
-      "default": "./dist/repository/filesystem/upload/upload_service_pb.ts"
+      "default": "./dist/repository/filesystem/upload/upload_service_pb.js"
     },
     "./dist/repository/pipedoc/pipedoc_service_pb": {
       "types": "./dist/repository/pipedoc/pipedoc_service_pb.d.ts",
-      "default": "./dist/repository/pipedoc/pipedoc_service_pb.ts"
+      "default": "./dist/repository/pipedoc/pipedoc_service_pb.js"
     },
     "./dist/repository/account/account_service_pb": {
       "types": "./dist/repository/account/account_service_pb.d.ts",
-      "default": "./dist/repository/account/account_service_pb.ts"
+      "default": "./dist/repository/account/account_service_pb.js"
     },
     "./dist/core/pipeline_core_types_pb": {
       "types": "./dist/core/pipeline_core_types_pb.d.ts",
-      "default": "./dist/core/pipeline_core_types_pb.ts"
+      "default": "./dist/core/pipeline_core_types_pb.js"
     },
     "./dist/repository/filesystem/filesystem_service_pb": {
       "types": "./dist/repository/filesystem/filesystem_service_pb.d.ts",
-      "default": "./dist/repository/filesystem/filesystem_service_pb.ts"
+      "default": "./dist/repository/filesystem/filesystem_service_pb.js"
     }
   },
   "files": [
-    "dist/**/*.ts",
-    "dist/**/*.d.ts"
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "dist/**/*.ts"
   ],
   "scripts": {
     "clean": "rm -rf dist",
