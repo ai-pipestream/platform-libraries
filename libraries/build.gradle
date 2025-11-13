@@ -67,7 +67,7 @@ subprojects {
 
     publishing {
         publications {
-            maven(MavenPublication) {
+            create('maven', MavenPublication) {
                 from components.java
 
                 pom {
@@ -90,7 +90,7 @@ subprojects {
                     }
 
                     scm {
-                        connection = 'scm:git:git://github.com/ai-pipestream/platform-libraries.git'
+                        connection = 'scm:git:https://github.com/ai-pipestream/platform-libraries.git'
                         developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/platform-libraries.git'
                         url = 'https://github.com/ai-pipestream/platform-libraries'
                     }
@@ -109,7 +109,7 @@ subprojects {
 
         if (signingKey && signingPassword) {
             useInMemoryPgpKeys(signingKey, signingPassword)
-            sign publishing.publications.maven
+            sign publishing.publications
         }
     }
 }

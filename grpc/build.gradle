@@ -36,7 +36,7 @@ subprojects {
 
         publishing {
             publications {
-                maven(MavenPublication) {
+                create('maven', MavenPublication) {
                     from components.java
 
                     pom {
@@ -78,7 +78,7 @@ subprojects {
 
             if (signingKey && signingPassword) {
                 useInMemoryPgpKeys(signingKey, signingPassword)
-                sign publishing.publications.maven
+                sign publishing.publications
             }
         }
     }
