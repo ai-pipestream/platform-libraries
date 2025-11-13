@@ -23,11 +23,10 @@ subprojects {
         withJavadocJar()
     }
 
-    // Common dependencies (BOM provides version management)
+    // Common dependencies
     dependencies {
-        // Use the BOM for version management
-        // Force eager evaluation of version to avoid timing issues with Quarkus
-        api platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
+        // Note: BOM not needed here - version catalog (libs) provides dependency management
+        // Individual projects can add it if needed
 
         // Testing
         testImplementation libs.quarkus.junit5
