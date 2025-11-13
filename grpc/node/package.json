@@ -1,6 +1,6 @@
 {
   "name": "@ai-pipestream/grpc-stubs",
-  "version": "0.1.6-alpha.20251110170250",
+  "version": "0.1.6-alpha.20251113021805",
   "description": "Generated gRPC stubs for Pipestream AI platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -124,14 +124,14 @@
     "directory": "grpc/node"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.56.0",
-    "@bufbuild/protoc-gen-es": "latest",
-    "typescript": "^5.9.2"
+    "@bufbuild/buf": "^1.59.0",
+    "@bufbuild/protoc-gen-es": "^2.10.1",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "latest",
-    "@connectrpc/connect": "latest",
-    "@connectrpc/connect-web": "latest"
+    "@bufbuild/protobuf": "^2.10.1",
+    "@connectrpc/connect": "^2.1.0",
+    "@connectrpc/connect-web": "^2.1.0"
   },
   "engines": {
     "node": ">=22.0.0 <23",

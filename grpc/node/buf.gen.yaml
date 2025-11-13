@@ -6,9 +6,6 @@ plugins:
     out: dist
     opt:
       - target=ts
-      - js_import_style=module
-      - ts_nocheck=false
-      - import_extension=.js
 
 inputs:
   - directory: ../grpc-stubs/src/main/proto
