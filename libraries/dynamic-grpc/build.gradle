@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    // Quarkus BOM needed for Quarkus plugin to work properly (non-enforced to allow overrides)
+    implementation platform(libs.quarkus.bom)
+
     // https://mvnrepository.com/artifact/io.vertx/vertx-grpc-client
     api libs.vertx.grpc.client
     implementation libs.quarkus.rest.client
