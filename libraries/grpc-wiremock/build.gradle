@@ -4,7 +4,8 @@ plugins {
 }
 
 dependencies {
-    // BOM inherited from root project
+    // Quarkus BOM needed for Quarkus plugin to work properly
+    implementation platform(libs.quarkus.bom)
 
     // Core WireMock with gRPC extension (versions from BOM)
     api libs.wiremock.standalone
