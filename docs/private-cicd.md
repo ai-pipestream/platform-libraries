@@ -10,15 +10,29 @@ This guide explains how to deploy this project to a private, air-gapped CI/CD en
 
 ## Initial Setup: Create SCM Version Tag
 
-**IMPORTANT:** This project uses Axion Release plugin for versioning, which determines the version from git tags. For a **fresh repository clone/install**, you MUST create an initial version tag first:
+**IMPORTANT:** This project uses Axion Release plugin for versioning, which determines the version from git tags. For a **fresh repository clone/install**, you MUST have at least one commit and create an initial version tag:
 
 ```bash
-# On your fresh repository
+# On your fresh repository - ensure you have at least one commit
+git log  # Should show at least one commit
+
+# If you get "failed to resolve 'HEAD' as a valid ref" error:
+# 1. Make sure you have committed at least one file
+# 2. Make sure you're on a branch (not detached HEAD)
+git status  # Should show "On branch main" or similar
+
+# Create the initial version tag
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Without this initial tag, the build will fail with version-related errors because Axion cannot determine the project version.
+**Common Issues:**
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `failed to resolve 'HEAD' as a valid ref` | No commits in repository | Make at least one commit first |
+| `Cannot determine project version` | No git tags exist | Create initial tag: `git tag v0.1.0` |
+| `detached HEAD state` | Not on a branch | `git checkout main` |
 
 After creating the initial tag:
 - Current version will be `v0.1.0` (on the tag)
