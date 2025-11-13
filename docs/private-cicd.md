@@ -8,6 +8,23 @@ This guide explains how to deploy this project to a private, air-gapped CI/CD en
 - Private CI/CD system (GitLab CI, Jenkins, etc.)
 - Network proxy (if any external dependencies needed)
 
+## Initial Setup: Create SCM Version Tag
+
+**IMPORTANT:** This project uses Axion Release plugin for versioning, which determines the version from git tags. For a **fresh repository clone/install**, you MUST create an initial version tag first:
+
+```bash
+# On your fresh repository
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Without this initial tag, the build will fail with version-related errors because Axion cannot determine the project version.
+
+After creating the initial tag:
+- Current version will be `v0.1.0` (on the tag)
+- Main branch will be `v0.1.1-SNAPSHOT` (next patch version)
+- All builds will have proper version numbers
+
 ## Key Concepts
 
 ### Why BOM Needs Local Publishing First
