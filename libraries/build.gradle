@@ -26,7 +26,8 @@ subprojects {
     // Common dependencies (BOM provides version management)
     dependencies {
         // Use the BOM for version management
-        api platform("ai.pipestream:pipeline-bom:${rootProject.version}")
+        // Force eager evaluation of version to avoid timing issues with Quarkus
+        api platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
 
         // Testing
         testImplementation libs.quarkus.junit5

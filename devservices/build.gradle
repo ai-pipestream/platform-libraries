@@ -28,7 +28,8 @@ subprojects {
 
     dependencies {
         // Import BOM for dependency management
-        implementation platform("ai.pipestream:pipeline-bom:${rootProject.version}")
+        // Force lazy evaluation of version to avoid timing issues with Quarkus
+        implementation platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
 
         // Gradle 9 requires explicit JUnit Platform launcher on the test runtime classpath
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
