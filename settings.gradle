@@ -9,9 +9,6 @@ rootProject.name = 'platform-libraries'
 dependencyResolutionManagement {
     repositories {
         mavenLocal {
-            mavenContent {
-                releasesOnly()
-            }
             content {
                 includeGroupByRegex "ai\\.pipestream(\\..*)?"
             }
