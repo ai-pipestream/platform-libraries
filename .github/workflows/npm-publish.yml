@@ -42,59 +42,29 @@ jobs:
       - name: Build and generate stubs
         working-directory: grpc/node
         run: pnpm run build
-
-            - name: Determine version and tag
-
-              id: version
-
-              working-directory: grpc/node
-
-              run: |
-
-                BASE_VERSION=$(jq -r '.version' package.json | cut -d- -f1)
-
-                TIMESTAMP=$(date +%Y%m%d%H%M%S)
-
-                SHORT_SHA=$(git rev-parse --short HEAD)
-
-      
-
-                # Always generate a unique alpha version
-
-                VERSION="${BASE_VERSION}-alpha.${TIMESTAMP}.${SHORT_SHA}"
-
-                TAG="alpha"
-
-      
-
-                echo "Generated unique version: ${VERSION}"
-
-      
-
-                echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-                echo "tag=${TAG}" >> $GITHUB_OUTPUT
-
-      
-
-            - name: Update package version
-
-              working-directory: grpc/node
-
-              run: |
-
-                npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-
-                echo "Updated package.json to version ${{ steps.version.outputs.version }}"
-
-      
-
-            - name: Publish to npm registry
-        working-directory: grpc/node
-        run: pnpm publish --tag ${{ steps.version.outputs.tag }} --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
+          - name: Determine version and tag
+          id: version
+          working-directory: grpc/node
+          run: |
+            BASE_VERSION=$(jq -r '.version' package.json | cut -d- -f1)
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            # Always generate a unique alpha version
+            VERSION="${BASE_VERSION}-alpha.${TIMESTAMP}.${SHORT_SHA}"
+            TAG="alpha"
+            echo "Generated unique version: ${VERSION}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        - name: Update package version
+          working-directory: grpc/node
+          run: |
+            npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+            echo "Updated package.json to version ${{ steps.version.outputs.version }}"
+        - name: Publish to npm registry
+          working-directory: grpc/node
+          run: pnpm publish --tag ${{ steps.version.outputs.tag }} --no-git-checks
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Summary
         run: |
           echo "✅ Published @ai-pipestream/grpc-stubs@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
