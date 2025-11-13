@@ -62,11 +62,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
-      - name: Update package version
-        working-directory: grpc/node
-        run: |
-          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-          echo "Updated package.json to version ${{ steps.version.outputs.version }}"
+
 
       - name: Publish to npm registry
         working-directory: grpc/node
