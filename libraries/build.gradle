@@ -25,7 +25,10 @@ subprojects {
 
     // Common dependencies
     dependencies {
-        // Quarkus BOM for all libraries (non-enforced to allow custom gRPC/protobuf versions)
+         // Pipeline BOM enforces our specific library versions (lazy eval to avoid timing issues)
+        api platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
+
+        // Quarkus BOM provides platform properties for Quarkus plugin (lower precedence)
         implementation platform(libs.quarkus.bom)
 
         // Testing

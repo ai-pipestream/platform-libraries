@@ -27,7 +27,10 @@ subprojects {
     }
 
     dependencies {
-        // Quarkus BOM for all devservices (non-enforced to allow custom versions)
+        // Pipeline BOM enforces our specific library versions (lazy eval to avoid timing issues)
+        implementation platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
+
+        // Quarkus BOM provides platform properties for Quarkus plugin (lower precedence)
         implementation platform(libs.quarkus.bom)
 
         // Gradle 9 requires explicit JUnit Platform launcher on the test runtime classpath
