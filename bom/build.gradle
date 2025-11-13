@@ -62,7 +62,7 @@ catalog {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        create('maven', MavenPublication) {
             from components.javaPlatform
             artifactId = 'pipeline-bom'
 
@@ -93,7 +93,7 @@ publishing {
             }
         }
 
-        catalog(MavenPublication) {
+        create('catalog', MavenPublication) {
             from components.versionCatalog
             artifactId = 'pipeline-bom-catalog'
 
@@ -117,7 +117,7 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:https://github.com/ai-pipestream' + '' + '/platform-libraries.git'
+                    connection = 'scm:git:https://github.com/ai-pipestream/platform-libraries.git'
                     developerConnection = 'scm:git:ssh://git@github.com/ai-pipestream/platform-libraries.git'
                     url = 'https://github.com/ai-pipestream/platform-libraries'
                 }
@@ -138,7 +138,7 @@ signing {
 
     if (signingKey && signingPassword) {
         useInMemoryPgpKeys(signingKey, signingPassword)
-        sign publishing.publications.maven
-        sign publishing.publications.catalog
+        // Sign all Maven publications defined above
+        sign publishing.publications
     }
 }
