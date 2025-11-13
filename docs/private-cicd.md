@@ -33,6 +33,28 @@ git push origin v0.1.0
 | `failed to resolve 'HEAD' as a valid ref` | No commits in repository | Make at least one commit first |
 | `Cannot determine project version` | No git tags exist | Create initial tag: `git tag v0.1.0` |
 | `detached HEAD state` | Not on a branch | `git checkout main` |
+| `Looking for version without -SNAPSHOT suffix` | On the tag commit exactly | Make a commit after the tag to get SNAPSHOT version |
+
+### Debugging Version Issues
+
+If modules are looking for versions without `-SNAPSHOT` when you expect snapshots:
+
+```bash
+# 1. Check what Axion thinks the version is
+./gradlew currentVersion
+
+# 2. Check git state - you should NOT be exactly on a tag
+git describe --tags
+# Should show something like: v0.1.0-1-g1234567 (1 commit after v0.1.0)
+# NOT just: v0.1.0 (exactly on the tag)
+
+# 3. If you're exactly on the tag, make a commit to move forward
+git commit --allow-empty -m "Move to snapshot version"
+
+# 4. Verify version is now a SNAPSHOT
+./gradlew currentVersion
+# Should show: 0.1.1-SNAPSHOT
+```
 
 After creating the initial tag:
 - Current version will be `v0.1.0` (on the tag)
