@@ -51,6 +51,14 @@ service PlatformRegistration {
   // list whenever any module is registered, unregistered, or changes
   // its health status.
   rpc WatchModules(google.protobuf.Empty) returns (stream ModuleListResponse);
+
+  // Get module schema (specific version or latest)
+  // Retrieves schema from Apicurio Registry
+  rpc GetModuleSchema(GetModuleSchemaRequest) returns (ModuleSchemaResponse);
+
+  // List all available schema versions for a module
+  // Provides detailed version metadata from Apicurio Registry
+  rpc GetModuleSchemaVersions(GetModuleSchemaVersionsRequest) returns (ModuleSchemaVersionsResponse);
 }
 
 // Service registration request
@@ -241,4 +249,42 @@ message ModuleUnregistered {
   string service_id = 1;
   string module_name = 2;
   google.protobuf.Timestamp timestamp = 3;
+}
+
+// Request to get module schema
+message GetModuleSchemaRequest {
+  string module_name = 1;              // Module name (e.g., "chunker", "parser")
+  optional string version = 2;         // If omitted, returns latest from Apicurio
+}
+
+// Response containing module schema
+message ModuleSchemaResponse {
+  string module_name = 1;              // Module name
+  string schema_json = 2;              // JSON Schema as string
+  string schema_version = 3;           // Current version (e.g., "1.2.3")
+  string artifact_id = 4;              // Apicurio artifact ID
+  map<string, string> metadata = 5;    // Additional metadata (author, description, etc.)
+  google.protobuf.Timestamp updated_at = 6;  // When schema was last updated in Apicurio
+  repeated string available_versions = 7;    // All versions available in Apicurio
+}
+
+// Request to get all schema versions for a module
+message GetModuleSchemaVersionsRequest {
+  string module_name = 1;              // Module name to get versions for
+}
+
+// Response containing all schema versions for a module
+message ModuleSchemaVersionsResponse {
+  string module_name = 1;              // Module name
+  string artifact_id = 2;              // Apicurio artifact ID
+  repeated ModuleSchemaVersion versions = 3;  // Detailed version info
+  string latest_version = 4;                  // Convenience: latest version string
+}
+
+// Schema version metadata
+message ModuleSchemaVersion {
+  string version = 1;                         // Version string (e.g., "1.2.3")
+  google.protobuf.Timestamp created_at = 2;   // When this version was created
+  map<string, string> metadata = 3;           // Version-specific metadata
+  optional string description = 4;            // Optional: version description/changelog
 }
