@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 21](https://img.shields.io/badge/Java-21-blue.svg)](https://adoptium.net/)
-[![Quarkus 3.29.2](https://img.shields.io/badge/Quarkus-3.29.2-blue)](https://quarkus.io/)
+[![Quarkus 3.29.3](https://img.shields.io/badge/Quarkus-3.29.3-blue)](https://quarkus.io/)
 [![gRPC 1.76.0](https://img.shields.io/badge/gRPC-1.76.0-green)](https://grpc.io/)
 
 </div>
@@ -165,7 +165,7 @@ Centralized dependency version management for the entire Pipestream AI platform.
 - `ai.pipestream:pipeline-bom-catalog` - Gradle version catalog
 
 **Key Features:**
-- Manages versions for Quarkus (3.29.2), gRPC (1.76.0), Protobuf (4.33.0)
+- Manages versions for Quarkus (3.29.3), gRPC (1.76.0), Protobuf (4.33.1)
 - Coordinates 50+ dependencies across the platform
 - Enforces strict versioning for critical components
 - Provides both Maven BOM and Gradle version catalog
@@ -914,7 +914,7 @@ Import the BOM to manage all platform dependencies:
 // build.gradle
 plugins {
     id 'java'
-    id 'io.quarkus' version '3.29.2'
+    id 'io.quarkus' version '3.29.3'
 }
 
 dependencies {
