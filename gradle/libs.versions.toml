@@ -24,7 +24,7 @@ aws-sdk = "2.35.10"
 apicurio = "3.1.1"
 # Testing
 awaitility = "4.3.0"
-testcontainers = "2.0.1"
+testcontainers = "2.0.2"
 assertj = "3.27.6"
 hamcrest = "3.0"
 json-schema-validator = "1.5.9"
