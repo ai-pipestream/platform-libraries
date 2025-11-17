@@ -47,7 +47,7 @@ testcontainers-consul = "1.21.3"
 smallrye-reactive-messaging = "4.13.0"
 # Document parsing
 commonmark = "0.27.0"
-pdfbox = "3.0.5"
+pdfbox = "3.0.6"
 # Security
 password4j = "1.8.4"
 
