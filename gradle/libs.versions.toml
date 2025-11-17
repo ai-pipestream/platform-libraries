@@ -33,7 +33,8 @@ jgrapht = "1.5.2"
 jimfs = "1.3.1"
 memoryfilesystem = "2.8.1"
 # Apache Tika - using 4.0.0-SNAPSHOT for latest features
-tika = "4.0.0-SNAPSHOT"
+#tika = "4.0.0-SNAPSHOT"
+tika4-shaded = "0.1.7"
 # DJL (Deep Java Library)
 djl = "0.35.0"
 djl-pytorch-jni = "2.7.1-0.35.0"
@@ -177,7 +178,7 @@ smallrye-stork-configuration-generator = { module = "io.smallrye.stork:stork-con
 vertx-grpc-client = { module = "io.vertx:vertx-grpc-client" }
 vertx-web-client = { module = "io.vertx:vertx-web-client" }
 vertx-consul-client = { module = "io.vertx:vertx-consul-client" }
-
+tika4-shaded = { module = "ai.pipestream:tika4-shaded", version.ref = "tika4-shaded" }
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }
 jandex = { id = "org.kordamp.gradle.jandex", version.ref = "jandex-plugin" }
@@ -192,3 +193,4 @@ quarkus-extension = { id = "io.quarkus.extension", version.ref = "quarkus" }
 quarkus-common = ["quarkus-arc", "quarkus-mutiny"]
 quarkus-grpc = ["quarkus-grpc"]
 quarkus-rest = ["quarkus-rest", "quarkus-rest-jackson"]
+
