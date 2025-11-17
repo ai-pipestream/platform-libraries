@@ -44,7 +44,7 @@ commons-compress = "1.28.0"
 opencsv = "5.12.0"
 mutiny-test-utils = "3.0.1"
 testcontainers-consul = "1.21.3"
-smallrye-reactive-messaging = "4.13.0"
+smallrye-reactive-messaging = "4.31.0"
 # Document parsing
 commonmark = "0.27.0"
 pdfbox = "3.0.5"
