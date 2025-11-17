@@ -38,6 +38,14 @@ test {
 tasks.withType(JavaCompile) {
     options.compilerArgs += ['-Xlint:-deprecation']
 }
+
+// Configure Quarkus to use local protoc if available
+tasks.withType(JavaExec) {
+    def protocPath = findProperty('quarkus.grpc.protoc-path') ?: System.getenv('PROTOC_PATH')
+    if (protocPath) {
+        systemProperty 'quarkus.grpc.protoc-path', protocPath
+    }
+}
 compileJava {
     options.encoding = 'UTF-8'
     options.compilerArgs << '-parameters'

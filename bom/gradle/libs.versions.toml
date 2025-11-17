@@ -70,6 +70,7 @@ quarkus-micrometer-registry-prometheus = { module = "io.quarkus:quarkus-micromet
 
 # gRPC and Protobuf
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 protobuf-java-util = { module = "com.google.protobuf:protobuf-java-util", version.ref = "protobuf" }
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
@@ -133,12 +134,6 @@ apicurio-registry-common = { module = "io.apicurio:apicurio-registry-common", ve
 jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
 jimfs = { module = "com.google.jimfs:jimfs", version.ref = "jimfs" }
 memoryfilesystem = { module = "com.github.marschall:memoryfilesystem", version.ref = "memoryfilesystem" }
-
-# Apache Tika
-tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
-tika-parsers-standard = { module = "org.apache.tika:tika-parsers-standard-package", version.ref = "tika" }
-tika-parser-scientific = { module = "org.apache.tika:tika-parser-scientific-package", version.ref = "tika" }
-tika-parser-ocr = { module = "org.apache.tika:tika-parser-ocr-module", version.ref = "tika" }
 
 # DJL (Deep Java Library)
 djl-huggingface-tokenizers = { module = "ai.djl.huggingface:tokenizers", version.ref = "djl" }

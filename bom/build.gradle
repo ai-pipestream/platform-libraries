@@ -35,6 +35,7 @@ dependencies {
         api("io.grpc:grpc-api") { version { strictly(libs.versions.grpc.get()) } }
         api("com.google.protobuf:protobuf-java") { version { strictly(libs.versions.protobuf.get()) } }
         api("com.google.protobuf:protobuf-java-util") { version { strictly(libs.versions.protobuf.get()) } }
+        api("com.google.protobuf:protoc") { version { strictly(libs.versions.protobuf.get()) } }
 
         // Internal ai.pipestream dependencies - all in coordinated release train
         api("ai.pipestream:devservices:${version}")

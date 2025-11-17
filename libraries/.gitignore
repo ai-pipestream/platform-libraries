@@ -235,6 +235,7 @@ dist
 .gradle/
 build/
 bin/
+.dev-helpers/
 !gradle/wrapper/gradle-wrapper.jar
 .idea/**/gradle.xml
 .idea/**/libraries

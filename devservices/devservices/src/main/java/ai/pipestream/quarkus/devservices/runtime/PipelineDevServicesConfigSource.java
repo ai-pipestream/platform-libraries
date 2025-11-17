@@ -19,10 +19,6 @@ public class PipelineDevServicesConfigSource implements ConfigSource {
 
     @Override
     public Set<String> getPropertyNames() {
-        LOG.info("========================================");
-        LOG.info("PipelineDevServicesConfigSource.getPropertyNames() called");
-        LOG.info("  enabled: " + System.getProperty("pipeline.devservices.enabled"));
-        LOG.info("========================================");
         Set<String> names = new HashSet<>();
         // Only return property names if the extension is active (enabled property is set)
         if (System.getProperty("pipeline.devservices.enabled") != null) {
@@ -32,28 +28,18 @@ public class PipelineDevServicesConfigSource implements ConfigSource {
             names.add(PREFIX + "start-services");
             names.add(PREFIX + "stop-services");
             names.add(PREFIX + "reuse-project-for-tests");
-            LOG.info("  Returning " + names.size() + " property names");
-        } else {
-            LOG.debug("  enabled property not set - returning empty set");
         }
         return names;
     }
 
     @Override
     public String getValue(String propertyName) {
-        LOG.info("========================================");
-        LOG.info("PipelineDevServicesConfigSource.getValue() called");
-        LOG.info("  propertyName: " + propertyName);
-        LOG.info("========================================");
-
         // Only provide values if the extension is active (enabled property is set)
         if (System.getProperty("pipeline.devservices.enabled") == null) {
-            LOG.debug("  enabled property not set - returning null");
             return null;
         }
 
         if (!propertyName.startsWith(PREFIX)) {
-            LOG.debug("  propertyName does not start with prefix - returning null");
             return null;
         }
 
@@ -61,9 +47,7 @@ public class PipelineDevServicesConfigSource implements ConfigSource {
         String propKey = "pipeline.devservices." + key;
         String value = System.getProperty(propKey);
         if (value != null) {
-            LOG.info("  Returning value for " + propKey + ": " + value);
-        } else {
-            LOG.debug("  No value found for " + propKey);
+            LOG.info(propKey + ": " + value);
         }
         return value;
     }

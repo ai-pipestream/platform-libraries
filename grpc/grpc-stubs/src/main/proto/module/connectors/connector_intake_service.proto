@@ -20,6 +20,22 @@ service ConnectorIntakeService {
   // Server returns: Single response when all chunks processed
   rpc StreamDocuments(stream DocumentIntakeRequest) returns (DocumentIntakeResponse);
 
+  // Method 1: Full file upload (unary RPC) - for files up to 2GB
+  // Simple request/response for complete file uploads
+  rpc UploadDocument(UploadDocumentRequest) returns (DocumentResponse);
+
+  // Method 3: Async chunked upload - Header handshake
+  // Returns upload reference/ID needed for chunks
+  rpc StartChunkedUpload(StartChunkedUploadRequest) returns (StartChunkedUploadResponse);
+
+  // Method 3: Async chunked upload - Individual chunk upload
+  // Can be called out-of-order, as fast as needed, variable chunk sizes
+  rpc UploadAsyncChunk(AsyncChunkedUploadChunkRequest) returns (AsyncChunkedUploadChunkResponse);
+
+  // Method 3: Async chunked upload - Footer completion
+  // Signals all chunks sent, returns chunk status (missing/errored/timeout)
+  rpc CompleteChunkedUpload(CompleteChunkedUploadRequest) returns (CompleteChunkedUploadResponse);
+
   // Register a new crawl session
   rpc StartCrawlSession(StartCrawlSessionRequest) returns (StartCrawlSessionResponse);
 
@@ -427,4 +443,99 @@ message CrawlSessionSummary {
   int64 bytes_processed = 8;
   string status = 9;              // "RUNNING", "COMPLETED", "FAILED"
   map<string, string> metadata = 10;
+}
+
+// ============================================
+// METHOD 1: FULL FILE UPLOAD (Unary RPC)
+// ============================================
+
+message UploadDocumentRequest {
+  // Authentication
+  string connector_id = 1;
+  string api_key = 2;
+  string session_id = 3;          // Optional: if provided, use existing session
+  
+  // Document data (full file in raw_data)
+  DocumentData document = 4;
+}
+
+// ============================================
+// METHOD 3: ASYNC CHUNKED UPLOAD
+// ============================================
+
+// Header: Start chunked upload - returns upload reference
+message StartChunkedUploadRequest {
+  // Authentication
+  string connector_id = 1;
+  string api_key = 2;
+  string session_id = 3;          // Optional: if provided, use existing session
+  
+  // Document metadata
+  string source_id = 4;           // ID in source system
+  string filename = 5;
+  string path = 6;                // Relative path/hierarchy
+  string mime_type = 7;
+  int64 expected_size_bytes = 8;  // Expected total size (0 if unknown)
+  
+  // Optional hints for chunking
+  int32 expected_chunk_count = 9; // Expected number of chunks (0 if unknown)
+  int64 expected_chunk_size = 10; // Expected average chunk size (0 if unknown)
+  
+  // Source system metadata
+  google.protobuf.Timestamp source_created = 11;
+  google.protobuf.Timestamp source_modified = 12;
+  map<string, string> source_metadata = 13;
+}
+
+message StartChunkedUploadResponse {
+  bool success = 1;
+  string upload_id = 2;           // Upload reference/ID needed for chunks
+  string message = 3;
+  
+  // Configuration returned from server
+  string redis_key_prefix = 4;    // Redis key prefix for chunks
+  int64 max_chunk_size = 5;       // Recommended max chunk size
+  int32 timeout_seconds = 6;      // Timeout for chunk uploads
+}
+
+// Chunk: Upload individual chunk (async chunked upload)
+message AsyncChunkedUploadChunkRequest {
+  string upload_id = 1;           // From StartChunkedUploadResponse
+  int32 chunk_number = 2;         // Ordering information (0-based)
+  bytes chunk_data = 3;            // Variable chunk size
+  int64 chunk_size_bytes = 4;     // Size of this chunk
+}
+
+message AsyncChunkedUploadChunkResponse {
+  bool success = 1;
+  string upload_id = 2;
+  int32 chunk_number = 3;
+  string message = 4;
+  string redis_key = 5;            // Redis key where chunk was stored
+}
+
+// Footer: Complete chunked upload
+message CompleteChunkedUploadRequest {
+  string upload_id = 1;           // From StartChunkedUploadResponse
+  string final_sha256 = 2;        // Final SHA256 from sender
+  int64 final_size_bytes = 3;      // Final total size
+  int32 total_chunks_sent = 4;     // Total number of chunks sent
+}
+
+message CompleteChunkedUploadResponse {
+  bool success = 1;
+  string upload_id = 2;
+  string document_id = 3;         // Final document ID after reassembly
+  string s3_key = 4;              // Where document was stored
+  string message = 5;
+  
+  // Chunk status information
+  repeated int32 missing_chunks = 6;      // Chunk numbers that are missing
+  repeated int32 errored_chunks = 7;       // Chunk numbers that errored
+  repeated int32 timeout_chunks = 8;       // Chunk numbers that timed out
+  repeated int32 needs_resend_chunks = 9; // Chunk numbers that need re-sending
+  
+  // Final upload result
+  string final_sha256 = 10;       // Server-calculated SHA256
+  int64 final_size_bytes = 11;    // Final size after reassembly
 }

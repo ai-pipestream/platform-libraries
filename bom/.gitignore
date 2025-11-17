@@ -233,5 +233,7 @@ build
 .gradle
 .claude
 .idea
+bin/
+.dev-helpers/
 
 

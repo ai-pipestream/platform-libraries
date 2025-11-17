@@ -7,6 +7,7 @@ build/
 .classpath
 .settings/
 bin/
+.dev-helpers/
 
 # IntelliJ
 .idea
