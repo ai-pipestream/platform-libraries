@@ -154,14 +154,12 @@ public class ConnectorServiceMockTest {
         connectorServiceMock.mockValidateApiKeyNotFound("missing-conn", "any-key");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("missing-conn")
-                    .setApiKey("any-key")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("missing-conn")
+                .setApiKey("any-key")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -179,14 +177,12 @@ public class ConnectorServiceMockTest {
         );
 
         // Call - should throw PERMISSION_DENIED
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("conn-123")
-                    .setApiKey("api-key-456")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("conn-123")
+                .setApiKey("api-key-456")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.PERMISSION_DENIED, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -200,14 +196,12 @@ public class ConnectorServiceMockTest {
         connectorServiceMock.mockValidateApiKeyRateLimited("conn-123", "api-key-456");
 
         // Call - should throw RESOURCE_EXHAUSTED
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("conn-123")
-                    .setApiKey("api-key-456")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("conn-123")
+                .setApiKey("api-key-456")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.RESOURCE_EXHAUSTED, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -221,14 +215,12 @@ public class ConnectorServiceMockTest {
         connectorServiceMock.mockValidateApiKeyUnauthenticated("conn-123", "invalid-key");
 
         // Call - should throw UNAUTHENTICATED
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("conn-123")
-                    .setApiKey("invalid-key")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("conn-123")
+                .setApiKey("invalid-key")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.UNAUTHENTICATED, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -251,14 +243,12 @@ public class ConnectorServiceMockTest {
         assertTrue(response1.getValid());
 
         // Call with different connector - should fail (no matching stub)
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("different-conn")
-                    .setApiKey("api-key-456")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("different-conn")
+                .setApiKey("api-key-456")
+                .build()
+        ));
 
         // WireMock returns UNIMPLEMENTED when no matching stub is found
         assertEquals(io.grpc.Status.Code.UNIMPLEMENTED, exception.getStatus().getCode());

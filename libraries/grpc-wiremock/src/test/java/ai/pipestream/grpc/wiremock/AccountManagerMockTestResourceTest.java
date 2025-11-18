@@ -123,13 +123,11 @@ public class AccountManagerMockTestResourceTest {
         accountMock.mockAccountNotFound("missing-account");
 
         // Call should fail
-        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> {
-            accountService.getAccount(
-                GetAccountRequest.newBuilder()
-                    .setAccountId("missing-account")
-                    .build()
-            );
-        });
+        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> accountService.getAccount(
+            GetAccountRequest.newBuilder()
+                .setAccountId("missing-account")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();

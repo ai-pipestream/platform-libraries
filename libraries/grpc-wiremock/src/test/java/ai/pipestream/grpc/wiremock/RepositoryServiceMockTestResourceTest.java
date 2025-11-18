@@ -93,14 +93,12 @@ public class RepositoryServiceMockTestResourceTest {
         repositoryMock.mockInitiateUploadNotFound("Drive not found");
 
         // Call should fail
-        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> {
-            uploadService.initiateUpload(
-                InitiateUploadRequest.newBuilder()
-                    .setDrive("missing-drive")
-                    .setName("test-file.txt")
-                    .build()
-            );
-        });
+        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> uploadService.initiateUpload(
+            InitiateUploadRequest.newBuilder()
+                .setDrive("missing-drive")
+                .setName("test-file.txt")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
     }

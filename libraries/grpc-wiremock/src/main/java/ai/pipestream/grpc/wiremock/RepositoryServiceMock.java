@@ -10,6 +10,7 @@ import static ai.pipestream.grpc.wiremock.WireMockGrpcCompat.*;
  * Ready-to-use mock utilities for the Repository Service (NodeUploadService).
  * Uses standard gRPC mocking that works with both standard and Mutiny clients.
  */
+@SuppressWarnings("UnusedReturnValue")
 public class RepositoryServiceMock {
 
     private final WireMockGrpcService mockService;

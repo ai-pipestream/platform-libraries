@@ -106,13 +106,11 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockInitiateUploadInvalidArgument("Missing required field: drive");
 
         // Call - should throw INVALID_ARGUMENT
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.initiateUpload(
-                InitiateUploadRequest.newBuilder()
-                    .setName("test-file.txt")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.initiateUpload(
+            InitiateUploadRequest.newBuilder()
+                .setName("test-file.txt")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -126,14 +124,12 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockInitiateUploadNotFound("Drive not found: missing-drive");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.initiateUpload(
-                InitiateUploadRequest.newBuilder()
-                    .setDrive("missing-drive")
-                    .setName("test-file.txt")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.initiateUpload(
+            InitiateUploadRequest.newBuilder()
+                .setDrive("missing-drive")
+                .setName("test-file.txt")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -147,14 +143,12 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockInitiateUploadResourceExhausted("Quota exceeded for drive");
 
         // Call - should throw RESOURCE_EXHAUSTED
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.initiateUpload(
-                InitiateUploadRequest.newBuilder()
-                    .setDrive("test-drive")
-                    .setName("test-file.txt")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.initiateUpload(
+            InitiateUploadRequest.newBuilder()
+                .setDrive("test-drive")
+                .setName("test-file.txt")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.RESOURCE_EXHAUSTED, exception.getStatus().getCode());
     }
@@ -165,14 +159,12 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockInitiateUploadInternalError("Internal server error");
 
         // Call - should throw INTERNAL
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.initiateUpload(
-                InitiateUploadRequest.newBuilder()
-                    .setDrive("test-drive")
-                    .setName("test-file.txt")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.initiateUpload(
+            InitiateUploadRequest.newBuilder()
+                .setDrive("test-drive")
+                .setName("test-file.txt")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.INTERNAL, exception.getStatus().getCode());
     }
@@ -206,16 +198,14 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockUploadChunkFailed("test-node-123", "Chunk processing failed");
 
         // Call - should throw INTERNAL
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.uploadChunk(
-                UploadChunkRequest.newBuilder()
-                    .setNodeId("test-node-123")
-                    .setUploadId("upload-456")
-                    .setChunkNumber(1)
-                    .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data"))
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.uploadChunk(
+            UploadChunkRequest.newBuilder()
+                .setNodeId("test-node-123")
+                .setUploadId("upload-456")
+                .setChunkNumber(1)
+                .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data"))
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.INTERNAL, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -229,16 +219,14 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockUploadChunkNotFound("missing-node", "Upload not found");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.uploadChunk(
-                UploadChunkRequest.newBuilder()
-                    .setNodeId("missing-node")
-                    .setUploadId("upload-456")
-                    .setChunkNumber(1)
-                    .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data"))
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.uploadChunk(
+            UploadChunkRequest.newBuilder()
+                .setNodeId("missing-node")
+                .setUploadId("upload-456")
+                .setChunkNumber(1)
+                .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data"))
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
     }
@@ -268,13 +256,11 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockGetUploadStatusNotFound("missing-node");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.getUploadStatus(
-                GetUploadStatusRequest.newBuilder()
-                    .setNodeId("missing-node")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.getUploadStatus(
+            GetUploadStatusRequest.newBuilder()
+                .setNodeId("missing-node")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -307,13 +293,11 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockCancelUploadFailed("test-node-123", "Upload already completed");
 
         // Call - should throw FAILED_PRECONDITION
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.cancelUpload(
-                CancelUploadRequest.newBuilder()
-                    .setNodeId("test-node-123")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.cancelUpload(
+            CancelUploadRequest.newBuilder()
+                .setNodeId("test-node-123")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.FAILED_PRECONDITION, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();
@@ -327,13 +311,11 @@ public class RepositoryServiceMockTest {
         repositoryServiceMock.mockCancelUploadNotFound("missing-node");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            uploadService.cancelUpload(
-                CancelUploadRequest.newBuilder()
-                    .setNodeId("missing-node")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> uploadService.cancelUpload(
+            CancelUploadRequest.newBuilder()
+                .setNodeId("missing-node")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
         String description = exception.getStatus().getDescription();

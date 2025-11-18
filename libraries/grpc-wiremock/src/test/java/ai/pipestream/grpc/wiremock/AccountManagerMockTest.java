@@ -108,13 +108,11 @@ public class AccountManagerMockTest {
         accountManagerMock.mockAccountNotFound("missing");
 
         // Call - should throw NOT_FOUND
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            accountService.getAccount(
-                GetAccountRequest.newBuilder()
-                    .setAccountId("missing")
-                    .build()
-            );
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> accountService.getAccount(
+            GetAccountRequest.newBuilder()
+                .setAccountId("missing")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
     }

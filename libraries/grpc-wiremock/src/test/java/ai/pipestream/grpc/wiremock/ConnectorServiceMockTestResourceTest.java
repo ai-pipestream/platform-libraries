@@ -98,14 +98,12 @@ public class ConnectorServiceMockTestResourceTest {
         connectorMock.mockValidateApiKeyNotFound("missing-connector", "any-key");
 
         // Call should fail
-        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> {
-            connectorService.validateApiKey(
-                ValidateApiKeyRequest.newBuilder()
-                    .setConnectorId("missing-connector")
-                    .setApiKey("any-key")
-                    .build()
-            );
-        });
+        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> connectorService.validateApiKey(
+            ValidateApiKeyRequest.newBuilder()
+                .setConnectorId("missing-connector")
+                .setApiKey("any-key")
+                .build()
+        ));
 
         assertEquals(io.grpc.Status.Code.NOT_FOUND, exception.getStatus().getCode());
     }
