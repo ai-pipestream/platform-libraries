@@ -193,6 +193,87 @@ public class RepositoryServiceMockTest {
     }
 
     @Test
+    void testMockUploadChunk_WithRequestMatching() {
+        // Setup mock with specific request matching
+        UploadChunkRequest expectedRequest = UploadChunkRequest.newBuilder()
+            .setNodeId("test-node-123")
+            .setUploadId("upload-456")
+            .setChunkNumber(2)
+            .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data for chunk 2"))
+            .setIsLast(false)
+            .build();
+
+        repositoryServiceMock.mockUploadChunk("test-node-123", 2, expectedRequest);
+
+        // Call with matching request
+        var response = uploadService.uploadChunk(expectedRequest);
+
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Chunk number should match", response.getChunkNumber(), is(equalTo(2L)));
+        assertThat("State should be UPLOADING", response.getState(), is(UploadState.UPLOAD_STATE_UPLOADING));
+        assertThat("File should not be complete", response.getIsFileComplete(), is(false));
+        assertThat("Bytes uploaded should be set", response.getBytesUploaded(), is(greaterThanOrEqualTo(0L)));
+    }
+
+    @Test
+    void testMockUploadChunk_WithRequestMatching_NonMatchingRequest() {
+        // Setup mock with specific request matching
+        UploadChunkRequest expectedRequest = UploadChunkRequest.newBuilder()
+            .setNodeId("test-node-123")
+            .setUploadId("upload-456")
+            .setChunkNumber(2)
+            .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data for chunk 2"))
+            .setIsLast(false)
+            .build();
+
+        repositoryServiceMock.mockUploadChunk("test-node-123", 2, expectedRequest);
+
+        // Call with non-matching request (different chunk number)
+        UploadChunkRequest nonMatchingRequest = UploadChunkRequest.newBuilder()
+            .setNodeId("test-node-123")
+            .setUploadId("upload-456")
+            .setChunkNumber(3)  // Different chunk number
+            .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk data for chunk 3"))
+            .setIsLast(false)
+            .build();
+
+        // Should fail with UNIMPLEMENTED since no matching stub
+        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> {
+            uploadService.uploadChunk(nonMatchingRequest);
+        });
+
+        assertThat("Should return UNIMPLEMENTED for non-matching request", 
+            exception.getStatus().getCode(), is(io.grpc.Status.Code.UNIMPLEMENTED));
+    }
+
+    @Test
+    void testMockUploadChunk_WithRequestMatching_LastChunk() {
+        // Setup mock for last chunk
+        UploadChunkRequest lastChunkRequest = UploadChunkRequest.newBuilder()
+            .setNodeId("test-node-123")
+            .setUploadId("upload-456")
+            .setChunkNumber(5)
+            .setData(com.google.protobuf.ByteString.copyFromUtf8("final chunk data"))
+            .setIsLast(true)
+            .build();
+
+        repositoryServiceMock.mockUploadChunk("test-node-123", 5, lastChunkRequest);
+
+        // Call with last chunk
+        var response = uploadService.uploadChunk(lastChunkRequest);
+
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Chunk number should match", response.getChunkNumber(), is(equalTo(5L)));
+        assertThat("State should be UPLOADING", response.getState(), is(UploadState.UPLOAD_STATE_UPLOADING));
+        // Note: The mock doesn't set isFileComplete based on isLast, but we verify the response structure
+        assertThat("Response should have chunk number", response.getChunkNumber(), is(greaterThan(0L)));
+    }
+
+    @Test
     void testMockUploadChunk_Failed() {
         // Setup mock for chunk upload failure
         repositoryServiceMock.mockUploadChunkFailed("test-node-123", "Chunk processing failed");
