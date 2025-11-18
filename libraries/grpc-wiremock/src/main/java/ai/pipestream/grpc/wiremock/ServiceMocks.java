@@ -11,7 +11,8 @@ public class ServiceMocks {
     private final WireMockServer wireMockServer;
     private PlatformRegistrationMock platformRegistrationMock;
     private AccountManagerMock accountManagerMock;
-    private SimpleServiceMock repositoryServiceMock;
+    private RepositoryServiceMock repositoryServiceMock;
+    private ConnectorServiceMock connectorServiceMock;
     private SimpleServiceMock mappingServiceMock;
     private SimpleServiceMock engineServiceMock;
     private SimpleServiceMock designModeServiceMock;
@@ -52,13 +53,25 @@ public class ServiceMocks {
     /**
      * Get or create the Repository Service mock.
      *
-     * @return the SimpleServiceMock instance for repository service
+     * @return the RepositoryServiceMock instance
      */
-    public SimpleServiceMock repository() {
+    public RepositoryServiceMock repository() {
         if (repositoryServiceMock == null) {
-            repositoryServiceMock = new SimpleServiceMock(wireMockServer.port());
+            repositoryServiceMock = new RepositoryServiceMock(wireMockServer.port());
         }
         return repositoryServiceMock;
+    }
+    
+    /**
+     * Get or create the Connector Service mock.
+     *
+     * @return the ConnectorServiceMock instance
+     */
+    public ConnectorServiceMock connector() {
+        if (connectorServiceMock == null) {
+            connectorServiceMock = new ConnectorServiceMock(wireMockServer.port());
+        }
+        return connectorServiceMock;
     }
     
     /**
@@ -116,6 +129,9 @@ public class ServiceMocks {
         repository()
             .setupDefaults();
             
+        connector()
+            .mockValidateApiKey("default-connector", "default-api-key", "default-account");
+            
         mapping()
             .setupDefaults();
             
@@ -140,6 +156,7 @@ public class ServiceMocks {
         platformRegistrationMock = null;
         accountManagerMock = null;
         repositoryServiceMock = null;
+        connectorServiceMock = null;
         mappingServiceMock = null;
         engineServiceMock = null;
         designModeServiceMock = null;
