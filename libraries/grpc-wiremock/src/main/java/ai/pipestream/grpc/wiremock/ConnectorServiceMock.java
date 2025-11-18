@@ -107,7 +107,7 @@ public class ConnectorServiceMock {
     }
 
     /**
-     * Mock failed API key validation.
+     * Mock failed API key validation (returns valid=false in response).
      *
      * @param connectorId The connector ID
      * @param apiKey The invalid API key
@@ -131,6 +131,94 @@ public class ConnectorServiceMock {
                 ))
         );
         
+        return this;
+    }
+
+    /**
+     * Mock API key validation failure with NOT_FOUND status (connector doesn't exist).
+     *
+     * @param connectorId The connector ID
+     * @param apiKey The API key
+     * @return this instance for method chaining
+     */
+    public ConnectorServiceMock mockValidateApiKeyNotFound(String connectorId, String apiKey) {
+        mockService.stubFor(
+            method("ValidateApiKey")
+                .withRequestMessage(equalToMessage(
+                    ValidateApiKeyRequest.newBuilder()
+                        .setConnectorId(connectorId)
+                        .setApiKey(apiKey)
+                        .build()
+                ))
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.NOT_FOUND,
+                    "Connector not found: " + connectorId)
+        );
+        return this;
+    }
+
+    /**
+     * Mock API key validation failure with PERMISSION_DENIED status (connector inactive or account inactive).
+     *
+     * @param connectorId The connector ID
+     * @param apiKey The API key
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public ConnectorServiceMock mockValidateApiKeyPermissionDenied(String connectorId, String apiKey, String errorMessage) {
+        mockService.stubFor(
+            method("ValidateApiKey")
+                .withRequestMessage(equalToMessage(
+                    ValidateApiKeyRequest.newBuilder()
+                        .setConnectorId(connectorId)
+                        .setApiKey(apiKey)
+                        .build()
+                ))
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.PERMISSION_DENIED, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock API key validation failure with RESOURCE_EXHAUSTED status (rate limit exceeded).
+     *
+     * @param connectorId The connector ID
+     * @param apiKey The API key
+     * @return this instance for method chaining
+     */
+    public ConnectorServiceMock mockValidateApiKeyRateLimited(String connectorId, String apiKey) {
+        mockService.stubFor(
+            method("ValidateApiKey")
+                .withRequestMessage(equalToMessage(
+                    ValidateApiKeyRequest.newBuilder()
+                        .setConnectorId(connectorId)
+                        .setApiKey(apiKey)
+                        .build()
+                ))
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.RESOURCE_EXHAUSTED,
+                    "Rate limit exceeded for connector: " + connectorId)
+        );
+        return this;
+    }
+
+    /**
+     * Mock API key validation failure with UNAUTHENTICATED status (invalid API key).
+     *
+     * @param connectorId The connector ID
+     * @param apiKey The invalid API key
+     * @return this instance for method chaining
+     */
+    public ConnectorServiceMock mockValidateApiKeyUnauthenticated(String connectorId, String apiKey) {
+        mockService.stubFor(
+            method("ValidateApiKey")
+                .withRequestMessage(equalToMessage(
+                    ValidateApiKeyRequest.newBuilder()
+                        .setConnectorId(connectorId)
+                        .setApiKey(apiKey)
+                        .build()
+                ))
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.UNAUTHENTICATED,
+                    "Invalid API key for connector: " + connectorId)
+        );
         return this;
     }
 

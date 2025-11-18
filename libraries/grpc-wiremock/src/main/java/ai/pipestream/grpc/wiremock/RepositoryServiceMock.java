@@ -185,6 +185,142 @@ public class RepositoryServiceMock {
     }
 
     /**
+     * Mock upload initiation failure with INVALID_ARGUMENT status.
+     *
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockInitiateUploadInvalidArgument(String errorMessage) {
+        mockService.stubFor(
+            method("InitiateUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.INVALID_ARGUMENT, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload initiation failure with NOT_FOUND status (e.g., drive or connector not found).
+     *
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockInitiateUploadNotFound(String errorMessage) {
+        mockService.stubFor(
+            method("InitiateUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.NOT_FOUND, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload initiation failure with RESOURCE_EXHAUSTED status (e.g., quota exceeded).
+     *
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockInitiateUploadResourceExhausted(String errorMessage) {
+        mockService.stubFor(
+            method("InitiateUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.RESOURCE_EXHAUSTED, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload initiation failure with INTERNAL status.
+     *
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockInitiateUploadInternalError(String errorMessage) {
+        mockService.stubFor(
+            method("InitiateUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.INTERNAL, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock chunk upload failure with INTERNAL status.
+     * Matches any UploadChunk request (no request matching required).
+     *
+     * @param nodeId The node ID (for documentation purposes, not used in matching)
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockUploadChunkFailed(String nodeId, String errorMessage) {
+        mockService.stubFor(
+            method("UploadChunk")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.INTERNAL, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock chunk upload failure with NOT_FOUND status (upload doesn't exist).
+     * Matches any UploadChunk request (no request matching required).
+     *
+     * @param nodeId The node ID (for documentation purposes, not used in matching)
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockUploadChunkNotFound(String nodeId, String errorMessage) {
+        mockService.stubFor(
+            method("UploadChunk")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.NOT_FOUND, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload status retrieval failure with NOT_FOUND status.
+     * Matches any GetUploadStatus request (no request matching required).
+     *
+     * @param nodeId The node ID (for documentation purposes, not used in matching)
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockGetUploadStatusNotFound(String nodeId) {
+        mockService.stubFor(
+            method("GetUploadStatus")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.NOT_FOUND,
+                    "Upload not found: " + nodeId)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload cancellation failure with FAILED_PRECONDITION status (e.g., already completed).
+     * Matches any CancelUpload request (no request matching required).
+     *
+     * @param nodeId The node ID (for documentation purposes, not used in matching)
+     * @param errorMessage The error message to return
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockCancelUploadFailed(String nodeId, String errorMessage) {
+        mockService.stubFor(
+            method("CancelUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.FAILED_PRECONDITION, errorMessage)
+        );
+        return this;
+    }
+
+    /**
+     * Mock upload cancellation failure with NOT_FOUND status.
+     * Matches any CancelUpload request (no request matching required).
+     *
+     * @param nodeId The node ID (for documentation purposes, not used in matching)
+     * @return this instance for method chaining
+     */
+    public RepositoryServiceMock mockCancelUploadNotFound(String nodeId) {
+        mockService.stubFor(
+            method("CancelUpload")
+                .willReturn(org.wiremock.grpc.dsl.WireMockGrpc.Status.NOT_FOUND,
+                    "Upload not found: " + nodeId)
+        );
+        return this;
+    }
+
+    /**
      * Setup default mocks for basic operations.
      * 
      * <p>Configures default InitiateUpload mock.
