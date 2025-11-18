@@ -488,14 +488,20 @@ message StartChunkedUploadRequest {
 }
 
 message StartChunkedUploadResponse {
+  // Indicates if the upload was successfully initiated
   bool success = 1;
-  string upload_id = 2;           // Upload reference/ID needed for chunks
+  
+  // Upload reference/ID needed for subsequent chunk uploads
+  string upload_id = 2;
+  
+  // Human-readable message about the upload initiation
   string message = 3;
   
-  // Configuration returned from server
-  string redis_key_prefix = 4;    // Redis key prefix for chunks
-  int64 max_chunk_size = 5;       // Recommended max chunk size
-  int32 timeout_seconds = 6;      // Timeout for chunk uploads
+  // Recommended maximum chunk size in bytes (server hint to client)
+  int64 max_chunk_size = 4;
+  
+  // Timeout in seconds for chunk uploads (after which chunks may expire)
+  int32 timeout_seconds = 5;
 }
 
 // Chunk: Upload individual chunk (async chunked upload)
@@ -507,11 +513,17 @@ message AsyncChunkedUploadChunkRequest {
 }
 
 message AsyncChunkedUploadChunkResponse {
+  // Indicates if the chunk was successfully queued
   bool success = 1;
+  
+  // Upload ID this chunk belongs to
   string upload_id = 2;
+  
+  // Chunk number (0-based) that was uploaded
   int32 chunk_number = 3;
+  
+  // Human-readable message about the chunk upload status
   string message = 4;
-  string redis_key = 5;            // Redis key where chunk was stored
 }
 
 // Footer: Complete chunked upload
