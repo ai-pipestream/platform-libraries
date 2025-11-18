@@ -9,6 +9,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -67,12 +69,13 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("test-node-123", response.getNodeId());
-        assertEquals("upload-456", response.getUploadId());
-        assertEquals(UploadState.UPLOAD_STATE_PENDING, response.getState());
-        assertFalse(response.getIsUpdate());
-        assertTrue(response.getCreatedAtEpochMs() > 0);
+        // Verify with Hamcrest matchers
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("upload-456")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Should not be an update", response.getIsUpdate(), is(false));
+        assertThat("Created timestamp should be positive", response.getCreatedAtEpochMs(), is(greaterThan(0L)));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test
@@ -88,10 +91,13 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertNotNull(response.getNodeId());
-        assertNotNull(response.getUploadId());
-        assertEquals(UploadState.UPLOAD_STATE_PENDING, response.getState());
+        // Verify with Hamcrest matchers
+        assertThat("Node ID should not be null", response.getNodeId(), is(notNullValue()));
+        assertThat("Node ID should not be empty", response.getNodeId(), is(not(emptyString())));
+        assertThat("Upload ID should not be null", response.getUploadId(), is(notNullValue()));
+        assertThat("Upload ID should not be empty", response.getUploadId(), is(not(emptyString())));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test
@@ -186,11 +192,12 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("test-node-123", response.getNodeId());
-        assertEquals(1, response.getChunkNumber());
-        assertEquals(UploadState.UPLOAD_STATE_UPLOADING, response.getState());
-        assertFalse(response.getIsFileComplete());
+        // Verify with Hamcrest matchers
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Chunk number should match", response.getChunkNumber(), is(equalTo(1L)));
+        assertThat("State should be UPLOADING", response.getState(), is(UploadState.UPLOAD_STATE_UPLOADING));
+        assertThat("File should not be complete", response.getIsFileComplete(), is(false));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test
@@ -248,10 +255,11 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("test-node-123", response.getNodeId());
-        assertEquals(UploadState.UPLOAD_STATE_UPLOADING, response.getState());
-        assertTrue(response.getUpdatedAtEpochMs() > 0);
+        // Verify with Hamcrest matchers
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("State should match", response.getState(), is(UploadState.UPLOAD_STATE_UPLOADING));
+        assertThat("Updated timestamp should be positive", response.getUpdatedAtEpochMs(), is(greaterThan(0L)));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test
@@ -286,10 +294,11 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("test-node-123", response.getNodeId());
-        assertTrue(response.getSuccess());
-        assertEquals("Upload cancelled successfully", response.getMessage());
+        // Verify with Hamcrest matchers
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Cancel should be successful", response.getSuccess(), is(true));
+        assertThat("Message should match", response.getMessage(), is(equalTo("Upload cancelled successfully")));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test
@@ -345,10 +354,13 @@ public class RepositoryServiceMockTest {
                 .build()
         );
 
-        // Verify defaults are set
-        assertNotNull(response.getNodeId());
-        assertNotNull(response.getUploadId());
-        assertEquals(UploadState.UPLOAD_STATE_PENDING, response.getState());
+        // Verify defaults are set with Hamcrest matchers
+        assertThat("Node ID should not be null", response.getNodeId(), is(notNullValue()));
+        assertThat("Node ID should not be empty", response.getNodeId(), is(not(emptyString())));
+        assertThat("Upload ID should not be null", response.getUploadId(), is(notNullValue()));
+        assertThat("Upload ID should not be empty", response.getUploadId(), is(not(emptyString())));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 }
 

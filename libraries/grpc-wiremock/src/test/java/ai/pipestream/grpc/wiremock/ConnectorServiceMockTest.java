@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -69,18 +71,25 @@ public class ConnectorServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertTrue(response.getValid());
-        assertEquals("API key validated successfully", response.getMessage());
-        assertTrue(response.hasConnector());
+        // Verify with Hamcrest matchers
+        assertThat("Response should be valid", response.getValid(), is(true));
+        assertThat("Message should match", response.getMessage(), is(equalTo("API key validated successfully")));
+        assertThat("Response should have connector", response.hasConnector(), is(true));
         
         ConnectorRegistration connector = response.getConnector();
-        assertEquals("conn-123", connector.getConnectorId());
-        assertEquals("Test Connector", connector.getConnectorName());
-        assertEquals("filesystem", connector.getConnectorType());
-        assertEquals("account-789", connector.getAccountId());
-        assertEquals("api-key-456", connector.getApiKey());
-        assertTrue(connector.getActive());
+        assertThat("Connector should not be null", connector, is(notNullValue()));
+        assertThat("Connector ID should match", connector.getConnectorId(), is(equalTo("conn-123")));
+        assertThat("Connector name should match", connector.getConnectorName(), is(equalTo("Test Connector")));
+        assertThat("Connector type should match", connector.getConnectorType(), is(equalTo("filesystem")));
+        assertThat("Account ID should match", connector.getAccountId(), is(equalTo("account-789")));
+        assertThat("API key should match", connector.getApiKey(), is(equalTo("api-key-456")));
+        assertThat("Connector should be active", connector.getActive(), is(true));
+        assertThat("S3 bucket should not be empty", connector.getS3Bucket(), is(not(emptyString())));
+        assertThat("S3 base path should not be empty", connector.getS3BasePath(), is(not(emptyString())));
+        assertThat("Max file size should be positive", connector.getMaxFileSize(), is(greaterThan(0L)));
+        assertThat("Rate limit should be positive", connector.getRateLimitPerMinute(), is(greaterThan(0L)));
+        assertThat("Created timestamp should be set", connector.hasCreated(), is(true));
+        assertThat("Updated timestamp should be set", connector.hasUpdated(), is(true));
     }
 
     @Test
@@ -105,12 +114,18 @@ public class ConnectorServiceMockTest {
                 .build()
         );
 
-        // Verify
-        assertTrue(response.getValid());
+        // Verify with Hamcrest matchers
+        assertThat("Response should be valid", response.getValid(), is(true));
+        assertThat("Response should have connector", response.hasConnector(), is(true));
+        
         ConnectorRegistration connector = response.getConnector();
-        assertEquals("custom-conn", connector.getConnectorId());
-        assertEquals("Custom Connector", connector.getConnectorName());
-        assertEquals("s3", connector.getConnectorType());
+        assertThat("Connector should not be null", connector, is(notNullValue()));
+        assertThat("Connector ID should match", connector.getConnectorId(), is(equalTo("custom-conn")));
+        assertThat("Connector name should match", connector.getConnectorName(), is(equalTo("Custom Connector")));
+        assertThat("Connector type should match", connector.getConnectorType(), is(equalTo("s3")));
+        assertThat("Account ID should match", connector.getAccountId(), is(equalTo("custom-account")));
+        assertThat("API key should match", connector.getApiKey(), is(equalTo("custom-key")));
+        assertThat("Connector should be active", connector.getActive(), is(true));
     }
 
     @Test
@@ -127,9 +142,10 @@ public class ConnectorServiceMockTest {
         );
 
         // Verify - this returns a response with valid=false, not an exception
-        assertFalse(response.getValid());
-        assertEquals("Invalid API key", response.getMessage());
-        assertFalse(response.hasConnector());
+        assertThat("Response should be invalid", response.getValid(), is(false));
+        assertThat("Message should match", response.getMessage(), is(equalTo("Invalid API key")));
+        assertThat("Response should not have connector", response.hasConnector(), is(false));
+        assertThat("Response should not be null", response, is(notNullValue()));
     }
 
     @Test

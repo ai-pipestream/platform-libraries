@@ -13,6 +13,7 @@ import static ai.pipestream.grpc.wiremock.WireMockGrpcCompat.*;
  * Ready-to-use mock utilities for the Connector Service (ConnectorAdminService).
  * Uses standard gRPC mocking that works with both standard and Mutiny clients.
  */
+@SuppressWarnings("UnusedReturnValue")
 public class ConnectorServiceMock {
 
     private final WireMockGrpcService mockService;

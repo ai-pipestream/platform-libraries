@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -35,9 +37,9 @@ public class ConnectorServiceMockTestResourceTest {
     @BeforeEach
     void setUp() {
         // Verify WireMock server is injected
-        assertNotNull(wireMockServer, "WireMock server should be injected");
-        assertTrue(wireMockServer.isRunning(), "WireMock server should be running");
-        assertTrue(wireMockServer.port() > 0, "WireMock server should have a valid port");
+        assertThat("WireMock server should be injected", wireMockServer, is(notNullValue()));
+        assertThat("WireMock server should be running", wireMockServer.isRunning(), is(true));
+        assertThat("WireMock server should have a valid port", wireMockServer.port(), is(greaterThan(0)));
 
         // Create gRPC client using Stork (which should route to WireMock)
         // Note: In a real Quarkus test, you'd use @GrpcClient, but for this test
@@ -76,12 +78,17 @@ public class ConnectorServiceMockTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertTrue(response.getValid());
-        assertEquals("API key validated successfully", response.getMessage());
-        assertTrue(response.hasConnector());
-        assertEquals("test-connector", response.getConnector().getConnectorId());
-        assertEquals("test-account", response.getConnector().getAccountId());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Response should be valid", response.getValid(), is(true));
+        assertThat("Message should match", response.getMessage(), is(equalTo("API key validated successfully")));
+        assertThat("Response should have connector", response.hasConnector(), is(true));
+        
+        var connector = response.getConnector();
+        assertThat("Connector should not be null", connector, is(notNullValue()));
+        assertThat("Connector ID should match", connector.getConnectorId(), is(equalTo("test-connector")));
+        assertThat("Account ID should match", connector.getAccountId(), is(equalTo("test-account")));
+        assertThat("Connector should be active", connector.getActive(), is(true));
     }
 
     @Test

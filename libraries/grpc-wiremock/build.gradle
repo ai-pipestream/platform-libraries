@@ -29,6 +29,10 @@ dependencies {
     testImplementation project(':libraries:dynamic-grpc-registration-clients')
     testImplementation project(':libraries:dynamic-grpc')
     testImplementation project(':libraries:pipeline-api')
+    
+    // Testing dependencies
+    testImplementation libs.hamcrest
+    testImplementation libs.hamcrest.library
 }
 
 // Version inherited from root project

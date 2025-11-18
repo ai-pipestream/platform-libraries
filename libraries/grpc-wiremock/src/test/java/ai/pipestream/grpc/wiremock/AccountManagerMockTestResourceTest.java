@@ -13,6 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -37,9 +39,9 @@ public class AccountManagerMockTestResourceTest {
     @BeforeEach
     void setUp() {
         // Verify WireMock server is injected
-        assertNotNull(wireMockServer, "WireMock server should be injected");
-        assertTrue(wireMockServer.isRunning(), "WireMock server should be running");
-        assertTrue(wireMockServer.port() > 0, "WireMock server should have a valid port");
+        assertThat("WireMock server should be injected", wireMockServer, is(notNullValue()));
+        assertThat("WireMock server should be running", wireMockServer.isRunning(), is(true));
+        assertThat("WireMock server should have a valid port", wireMockServer.port(), is(greaterThan(0)));
 
         // Create gRPC client using Stork (which should route to WireMock)
         // Note: In a real Quarkus test, you'd use @GrpcClient, but for this test
@@ -77,11 +79,14 @@ public class AccountManagerMockTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertEquals("test-account", response.getAccountId());
-        assertEquals("Test Account", response.getName());
-        assertEquals("Test description", response.getDescription());
-        assertTrue(response.getActive());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Account ID should match", response.getAccountId(), is(equalTo("test-account")));
+        assertThat("Account name should match", response.getName(), is(equalTo("Test Account")));
+        assertThat("Account description should match", response.getDescription(), is(equalTo("Test description")));
+        assertThat("Account should be active", response.getActive(), is(true));
+        assertThat("Created timestamp should be set", response.getCreatedAt(), is(notNullValue()));
+        assertThat("Updated timestamp should be set", response.getUpdatedAt(), is(notNullValue()));
     }
 
     @Test
@@ -99,10 +104,16 @@ public class AccountManagerMockTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertTrue(response.getCreated());
-        assertEquals("new-account", response.getAccount().getAccountId());
-        assertEquals("New Account", response.getAccount().getName());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Account should be created", response.getCreated(), is(true));
+        assertThat("Response should have account", response.hasAccount(), is(true));
+        
+        var account = response.getAccount();
+        assertThat("Account should not be null", account, is(notNullValue()));
+        assertThat("Account ID should match", account.getAccountId(), is(equalTo("new-account")));
+        assertThat("Account name should match", account.getName(), is(equalTo("New Account")));
+        assertThat("Account description should match", account.getDescription(), is(equalTo("New description")));
     }
 
     @Test
@@ -140,9 +151,11 @@ public class AccountManagerMockTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertTrue(response.getSuccess());
-        assertEquals("Account inactivated successfully", response.getMessage());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Inactivation should be successful", response.getSuccess(), is(true));
+        assertThat("Message should match", response.getMessage(), is(equalTo("Account inactivated successfully")));
+        assertThat("No drives should be affected", response.getDrivesAffected(), is(equalTo(0)));
     }
 }
 

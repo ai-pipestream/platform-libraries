@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -34,9 +36,9 @@ public class RepositoryServiceMockTestResourceTest {
     @BeforeEach
     void setUp() {
         // Verify WireMock server is injected
-        assertNotNull(wireMockServer, "WireMock server should be injected");
-        assertTrue(wireMockServer.isRunning(), "WireMock server should be running");
-        assertTrue(wireMockServer.port() > 0, "WireMock server should have a valid port");
+        assertThat("WireMock server should be injected", wireMockServer, is(notNullValue()));
+        assertThat("WireMock server should be running", wireMockServer.isRunning(), is(true));
+        assertThat("WireMock server should have a valid port", wireMockServer.port(), is(greaterThan(0)));
 
         // Create gRPC client using Stork (which should route to WireMock)
         // Note: In a real Quarkus test, you'd use @GrpcClient, but for this test
@@ -75,10 +77,13 @@ public class RepositoryServiceMockTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertEquals("test-node-123", response.getNodeId());
-        assertEquals("upload-456", response.getUploadId());
-        assertEquals(UploadState.UPLOAD_STATE_PENDING, response.getState());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("upload-456")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Created timestamp should be positive", response.getCreatedAtEpochMs(), is(greaterThan(0L)));
+        assertThat("Should not be an update", response.getIsUpdate(), is(false));
     }
 
     @Test

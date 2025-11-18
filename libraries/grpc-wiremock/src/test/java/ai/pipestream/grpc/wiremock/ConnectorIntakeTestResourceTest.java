@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -37,9 +39,9 @@ public class ConnectorIntakeTestResourceTest {
     @BeforeEach
     void setUp() {
         // Verify WireMock server is injected
-        assertNotNull(wireMockServer, "WireMock server should be injected");
-        assertTrue(wireMockServer.isRunning(), "WireMock server should be running");
-        assertTrue(wireMockServer.port() > 0, "WireMock server should have a valid port");
+        assertThat("WireMock server should be injected", wireMockServer, is(notNullValue()));
+        assertThat("WireMock server should be running", wireMockServer.isRunning(), is(true));
+        assertThat("WireMock server should have a valid port", wireMockServer.port(), is(greaterThan(0)));
 
         // Create gRPC client (directly to WireMock port for this test)
         channel = ManagedChannelBuilder.forAddress("localhost", wireMockServer.port())
@@ -76,9 +78,11 @@ public class ConnectorIntakeTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertEquals("test-node-123", response.getNodeId());
-        assertEquals("upload-456", response.getUploadId());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-123")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("upload-456")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
     }
 
     @Test
@@ -96,9 +100,15 @@ public class ConnectorIntakeTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertTrue(response.getValid());
-        assertEquals("test-connector", response.getConnector().getConnectorId());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Response should be valid", response.getValid(), is(true));
+        assertThat("Response should have connector", response.hasConnector(), is(true));
+        
+        var connector = response.getConnector();
+        assertThat("Connector should not be null", connector, is(notNullValue()));
+        assertThat("Connector ID should match", connector.getConnectorId(), is(equalTo("test-connector")));
+        assertThat("Account ID should match", connector.getAccountId(), is(equalTo("test-account")));
     }
 
     @Test
@@ -115,10 +125,13 @@ public class ConnectorIntakeTestResourceTest {
                 .build()
         );
 
-        // Verify response
-        assertEquals("test-account", response.getAccountId());
-        assertEquals("Test Account", response.getName());
-        assertTrue(response.getActive());
+        // Verify response with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Account ID should match", response.getAccountId(), is(equalTo("test-account")));
+        assertThat("Account name should match", response.getName(), is(equalTo("Test Account")));
+        assertThat("Account description should match", response.getDescription(), is(equalTo("Test description")));
+        assertThat("Account should be active", response.getActive(), is(true));
+        assertThat("Created timestamp should be set", response.getCreatedAt(), is(notNullValue()));
     }
 
     @Test
@@ -136,7 +149,7 @@ public class ConnectorIntakeTestResourceTest {
         accountMock.mockGetAccount("acc-1", "Account 1", "Desc", true);
 
         // All should work on the same port - verify by making actual calls
-        assertTrue(port > 0);
+        assertThat("Port should be positive", port, is(greaterThan(0)));
         
         // Verify repository service works
         var uploadService = NodeUploadServiceGrpc.newBlockingStub(channel);
@@ -146,7 +159,9 @@ public class ConnectorIntakeTestResourceTest {
                 .setName("test.txt")
                 .build()
         );
-        assertEquals("node-1", uploadResponse.getNodeId());
+        assertThat("Upload response should not be null", uploadResponse, is(notNullValue()));
+        assertThat("Node ID should match", uploadResponse.getNodeId(), is(equalTo("node-1")));
+        assertThat("Upload ID should match", uploadResponse.getUploadId(), is(equalTo("upload-1")));
         
         // Verify connector service works
         var connectorService = ConnectorAdminServiceGrpc.newBlockingStub(channel);
@@ -156,7 +171,9 @@ public class ConnectorIntakeTestResourceTest {
                 .setApiKey("key-1")
                 .build()
         );
-        assertTrue(connectorResponse.getValid());
+        assertThat("Connector response should not be null", connectorResponse, is(notNullValue()));
+        assertThat("Response should be valid", connectorResponse.getValid(), is(true));
+        assertThat("Connector ID should match", connectorResponse.getConnector().getConnectorId(), is(equalTo("conn-1")));
         
         // Verify account service works
         var accountService = AccountServiceGrpc.newBlockingStub(channel);
@@ -165,7 +182,10 @@ public class ConnectorIntakeTestResourceTest {
                 .setAccountId("acc-1")
                 .build()
         );
-        assertEquals("acc-1", accountResponse.getAccountId());
+        assertThat("Account response should not be null", accountResponse, is(notNullValue()));
+        assertThat("Account ID should match", accountResponse.getAccountId(), is(equalTo("acc-1")));
+        assertThat("Account name should match", accountResponse.getName(), is(equalTo("Account 1")));
+        assertThat("Account should be active", accountResponse.getActive(), is(true));
     }
 }
 

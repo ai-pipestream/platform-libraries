@@ -12,6 +12,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -69,13 +71,16 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("test-account", account.getAccountId());
-        assertEquals("Test Account", account.getName());
-        assertEquals("Test description", account.getDescription());
-        assertTrue(account.getActive());
-        assertNotNull(account.getCreatedAt());
-        assertNotNull(account.getUpdatedAt());
+        // Verify with Hamcrest matchers
+        assertThat("Account should not be null", account, is(notNullValue()));
+        assertThat("Account ID should match", account.getAccountId(), is(equalTo("test-account")));
+        assertThat("Account name should match", account.getName(), is(equalTo("Test Account")));
+        assertThat("Account description should match", account.getDescription(), is(equalTo("Test description")));
+        assertThat("Account should be active", account.getActive(), is(true));
+        assertThat("Created timestamp should be set", account.getCreatedAt(), is(notNullValue()));
+        assertThat("Updated timestamp should be set", account.getUpdatedAt(), is(notNullValue()));
+        assertThat("Created timestamp should have seconds", account.getCreatedAt().getSeconds(), is(greaterThan(0L)));
+        assertThat("Updated timestamp should have seconds", account.getUpdatedAt().getSeconds(), is(greaterThan(0L)));
     }
 
     @Test
@@ -90,9 +95,11 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertEquals("inactive", account.getAccountId());
-        assertFalse(account.getActive());
+        // Verify with Hamcrest matchers
+        assertThat("Account should not be null", account, is(notNullValue()));
+        assertThat("Account ID should match", account.getAccountId(), is(equalTo("inactive")));
+        assertThat("Account should not be active", account.getActive(), is(false));
+        assertThat("Account name should match", account.getName(), is(equalTo("Inactive Account")));
     }
 
     @Test
@@ -126,10 +133,16 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertTrue(response.getCreated());
-        assertEquals("new-account", response.getAccount().getAccountId());
-        assertEquals("New Account", response.getAccount().getName());
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Account should be created", response.getCreated(), is(true));
+        assertThat("Response should have account", response.hasAccount(), is(true));
+        
+        var account = response.getAccount();
+        assertThat("Account should not be null", account, is(notNullValue()));
+        assertThat("Account ID should match", account.getAccountId(), is(equalTo("new-account")));
+        assertThat("Account name should match", account.getName(), is(equalTo("New Account")));
+        assertThat("Account description should match", account.getDescription(), is(equalTo("New description")));
     }
 
     @Test
@@ -146,9 +159,14 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertFalse(response.getCreated());
-        assertEquals("existing", response.getAccount().getAccountId());
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Account should not be created (already exists)", response.getCreated(), is(false));
+        assertThat("Response should have account", response.hasAccount(), is(true));
+        
+        var account = response.getAccount();
+        assertThat("Account should not be null", account, is(notNullValue()));
+        assertThat("Account ID should match", account.getAccountId(), is(equalTo("existing")));
     }
 
     @Test
@@ -164,10 +182,11 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertTrue(response.getSuccess());
-        assertEquals("Account inactivated successfully", response.getMessage());
-        assertEquals(0, response.getDrivesAffected());
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Inactivation should be successful", response.getSuccess(), is(true));
+        assertThat("Message should match", response.getMessage(), is(equalTo("Account inactivated successfully")));
+        assertThat("No drives should be affected", response.getDrivesAffected(), is(equalTo(0)));
     }
 
     @Test
@@ -183,8 +202,10 @@ public class AccountManagerMockTest {
                 .build()
         );
 
-        // Verify
-        assertFalse(response.getSuccess());
-        assertTrue(response.getMessage().contains("not found"));
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Inactivation should not be successful", response.getSuccess(), is(false));
+        assertThat("Message should contain 'not found'", response.getMessage(), containsString("not found"));
+        assertThat("Message should not be empty", response.getMessage(), is(not(emptyString())));
     }
 }
