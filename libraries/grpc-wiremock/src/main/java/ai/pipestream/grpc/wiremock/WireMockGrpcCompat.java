@@ -61,12 +61,16 @@ public final class WireMockGrpcCompat {
     /**
      * Request body matcher equivalent to WireMockGrpc.equalToMessage(MessageOrBuilder),
      * implemented via JSON to avoid shaded protobuf type incompatibilities.
+     * <p>
+     * Uses {@link ProtoJson#toJsonWithoutDefaults(MessageOrBuilder)} to ensure
+     * the JSON matches what gRPC clients actually send (which may omit default values).
      *
      * @param messageOrBuilder A built message or builder representing the expected request
      * @return a StringValuePattern that matches the request JSON
      */
     public static com.github.tomakehurst.wiremock.matching.StringValuePattern equalToMessage(MessageOrBuilder messageOrBuilder) {
-        final String json = ProtoJson.toJson(messageOrBuilder);
+        // Use toJsonWithoutDefaults for request matching to match what gRPC actually sends
+        final String json = ProtoJson.toJsonWithoutDefaults(messageOrBuilder);
         return com.github.tomakehurst.wiremock.client.WireMock.equalToJson(json, true, false);
     }
 }

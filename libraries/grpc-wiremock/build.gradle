@@ -40,7 +40,7 @@ dependencies {
 // Publishing configuration inherited from root project
 
 // Suppress enforced platform validation for publishing
-tasks.withType(GenerateModuleMetadata) {
+tasks.withType(GenerateModuleMetadata).configureEach {
     suppressedValidationErrors.add('enforced-platform')
 }
 
@@ -65,7 +65,7 @@ compileTestJava {
 
 // Extract gRPC descriptor from grpc-google-descriptor JAR to test resources
 // WireMock scans filesystem directories, not JAR files, so descriptor must be extracted
-task copyGrpcDescriptor(type: Copy) {
+tasks.register('copyGrpcDescriptor', Copy) {
     dependsOn project(':grpc:grpc-google-descriptor').tasks.jar
     from {
         def descriptorJar = configurations.runtimeClasspath.files.find { it.name.contains('grpc-google-descriptor') }

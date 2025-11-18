@@ -101,6 +101,149 @@ public class RepositoryServiceMockTest {
     }
 
     @Test
+    void testMockInitiateUpload_WithRequestMatching() {
+        // Setup mock with specific request matching - include all fields
+        InitiateUploadRequest expectedRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setParentId("parent-123")
+            .setName("test-file.txt")
+            .putMetadata("key1", "value1")
+            .putMetadata("key2", "value2")
+            .setExpectedSize(1024L)
+            .setMimeType("text/plain")
+            .setConnectorId("connector-123")
+            .setPath("test/path/")
+            // Don't set failIfExists if it's false (default value) - let it be omitted
+            .build();
+
+        repositoryServiceMock.mockInitiateUpload("test-node-456", "upload-789", expectedRequest);
+
+        // Call with matching request - build a fresh request with EXACT same values
+        var actualRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setParentId("parent-123")
+            .setName("test-file.txt")
+            .putMetadata("key1", "value1")
+            .putMetadata("key2", "value2")
+            .setExpectedSize(1024L)
+            .setMimeType("text/plain")
+            .setConnectorId("connector-123")
+            .setPath("test/path/")
+            .build();
+        
+        var response = uploadService.initiateUpload(actualRequest);
+
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("test-node-456")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("upload-789")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Should not be an update", response.getIsUpdate(), is(false));
+        assertThat("Created timestamp should be positive", response.getCreatedAtEpochMs(), is(greaterThan(0L)));
+    }
+
+    @Test
+    void testMockInitiateUpload_WithRequestMatching_NonMatchingRequest() {
+        // Setup mock with specific request matching
+        InitiateUploadRequest expectedRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setParentId("parent-123")
+            .setName("test-file.txt")
+            .setConnectorId("connector-123")
+            .build();
+
+        repositoryServiceMock.mockInitiateUpload("test-node-456", "upload-789", expectedRequest);
+
+        // Call with non-matching request (different drive)
+        InitiateUploadRequest nonMatchingRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("different-drive")  // Different drive
+            .setParentId("parent-123")
+            .setName("test-file.txt")
+            .setConnectorId("connector-123")
+            .build();
+
+        // Should fail with UNIMPLEMENTED since no matching stub
+        var exception = assertThrows(io.grpc.StatusRuntimeException.class, () -> {
+            uploadService.initiateUpload(nonMatchingRequest);
+        });
+
+        assertThat("Should return UNIMPLEMENTED for non-matching request", 
+            exception.getStatus().getCode(), is(io.grpc.Status.Code.UNIMPLEMENTED));
+    }
+
+    @Test
+    void testMockInitiateUpload_WithRequestMatching_WithMetadata() {
+        // Setup mock with request that includes metadata
+        InitiateUploadRequest expectedRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setName("document.pdf")
+            .putMetadata("author", "John Doe")
+            .putMetadata("version", "1.0")
+            .putMetadata("category", "report")
+            .setExpectedSize(5000L)
+            .setMimeType("application/pdf")
+            .setConnectorId("connector-456")
+            .setPath("documents/2024/")
+            .build();
+
+        repositoryServiceMock.mockInitiateUpload("node-with-metadata", "upload-with-metadata", expectedRequest);
+
+        // Call with matching request - build a fresh request with same values
+        var actualRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setName("document.pdf")
+            .putMetadata("author", "John Doe")
+            .putMetadata("version", "1.0")
+            .putMetadata("category", "report")
+            .setExpectedSize(5000L)
+            .setMimeType("application/pdf")
+            .setConnectorId("connector-456")
+            .setPath("documents/2024/")
+            .build();
+        
+        var response = uploadService.initiateUpload(actualRequest);
+
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("node-with-metadata")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("upload-with-metadata")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Created timestamp should be positive", response.getCreatedAtEpochMs(), is(greaterThan(0L)));
+    }
+
+    @Test
+    void testMockInitiateUpload_WithRequestMatching_FailIfExists() {
+        // Setup mock with failIfExists=true
+        InitiateUploadRequest expectedRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setName("existing-file.txt")
+            .setClientNodeId("client-node-123")
+            .setFailIfExists(true)
+            .setConnectorId("connector-789")
+            .build();
+
+        repositoryServiceMock.mockInitiateUpload("existing-node", "existing-upload", expectedRequest);
+
+        // Call with matching request - build a fresh request with same values
+        var actualRequest = InitiateUploadRequest.newBuilder()
+            .setDrive("test-drive")
+            .setName("existing-file.txt")
+            .setClientNodeId("client-node-123")
+            .setFailIfExists(true)
+            .setConnectorId("connector-789")
+            .build();
+        
+        var response = uploadService.initiateUpload(actualRequest);
+
+        // Verify with Hamcrest matchers
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Node ID should match", response.getNodeId(), is(equalTo("existing-node")));
+        assertThat("Upload ID should match", response.getUploadId(), is(equalTo("existing-upload")));
+        assertThat("State should be PENDING", response.getState(), is(UploadState.UPLOAD_STATE_PENDING));
+        assertThat("Should not be an update (mock doesn't check failIfExists)", response.getIsUpdate(), is(false));
+    }
+
+    @Test
     void testMockInitiateUpload_InvalidArgument() {
         // Setup mock for invalid argument
         repositoryServiceMock.mockInitiateUploadInvalidArgument("Missing required field: drive");
