@@ -98,10 +98,8 @@ public class WireMockGrpcVerifierTest {
 
     @Test
     void testVerifyMethodCalled_WithExactCount_Success() {
-        // Setup mock
-        repositoryMock.mockUploadChunk("node-123", 1);
-        repositoryMock.mockUploadChunk("node-123", 2);
-        repositoryMock.mockUploadChunk("node-123", 3);
+        // Setup mock using dynamic approach to avoid WireMock bug #1230
+        repositoryMock.mockUploadChunkDynamic("node-123", 3);
 
         // Make 3 calls
         for (int i = 1; i <= 3; i++) {
@@ -125,8 +123,8 @@ public class WireMockGrpcVerifierTest {
 
     @Test
     void testVerifyMethodCalled_WithExactCount_Failure_WrongCount() {
-        // Setup mock
-        repositoryMock.mockUploadChunk("node-123", 1);
+        // Setup mock using dynamic approach to avoid WireMock bug #1230
+        repositoryMock.mockUploadChunkDynamic("node-123", 1);
 
         // Make only 1 call
         uploadService.uploadChunk(
@@ -262,8 +260,8 @@ public class WireMockGrpcVerifierTest {
 
     @Test
     void testGetRequestCount_MultipleCalls() {
-        // Setup mock
-        repositoryMock.mockUploadChunk("node-123", 1);
+        // Setup mock using dynamic approach to avoid WireMock bug #1230
+        repositoryMock.mockUploadChunkDynamic("node-123", 5);
 
         // Make 5 calls
         for (int i = 1; i <= 5; i++) {
@@ -319,8 +317,9 @@ public class WireMockGrpcVerifierTest {
     @Test
     void testVerifyMultipleMethods() {
         // Setup mocks for multiple methods
+        // Use dynamic approach for uploadChunk to avoid WireMock bug #1230
         repositoryMock.mockInitiateUpload("node-123", "upload-456");
-        repositoryMock.mockUploadChunk("node-123", 1);
+        repositoryMock.mockUploadChunkDynamic("node-123", 1);
         repositoryMock.mockGetUploadStatus("node-123", UploadState.UPLOAD_STATE_PENDING);
 
         // Make calls to different methods

@@ -296,9 +296,9 @@ public class ChunkedUploadFlowHelperTest {
         String nodeId = "node-123";
         String uploadId = "upload-456";
 
-        // Setup chunks
-        flowHelper.setupUploadChunk(nodeId, 1);
-        flowHelper.setupUploadChunk(nodeId, 2);
+        // Setup chunks using dynamic approach to avoid WireMock bug #1230
+        // Use mockUploadChunkDynamic to set up for 2 chunks, but only call 1
+        flowHelper.getRepositoryMock().mockUploadChunkDynamic(nodeId, 2);
 
         // Upload only 1 chunk
         uploadService.uploadChunk(
