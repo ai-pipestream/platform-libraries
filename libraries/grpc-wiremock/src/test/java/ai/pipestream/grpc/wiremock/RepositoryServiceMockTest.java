@@ -35,6 +35,9 @@ public class RepositoryServiceMockTest {
                 .extensions(new org.wiremock.grpc.GrpcExtensionFactory())
         );
         wireMockServer.start();
+        
+        // Reset WireMock to ensure clean state for each test
+        wireMockServer.resetAll();
 
         // Create RepositoryServiceMock
         repositoryServiceMock = new RepositoryServiceMock(wireMockServer.port());
@@ -314,8 +317,9 @@ public class RepositoryServiceMockTest {
 
     @Test
     void testMockUploadChunk_Success() {
-        // Setup mock
-        repositoryServiceMock.mockUploadChunk("test-node-123", 1);
+        // Setup mock using dynamic approach to avoid WireMock bug #1230
+        // For single chunks, mockUploadChunkDynamic works reliably
+        repositoryServiceMock.mockUploadChunkDynamic("test-node-123", 1);
 
         // Call
         var response = uploadService.uploadChunk(

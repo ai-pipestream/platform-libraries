@@ -64,6 +64,19 @@ public final class WireMockGrpcCompat {
      * <p>
      * Uses {@link ProtoJson#toJsonWithoutDefaults(MessageOrBuilder)} to ensure
      * the JSON matches what gRPC clients actually send (which may omit default values).
+     * <p>
+     * Uses {@code equalToJson} with {@code ignoreExtraElements=true} to allow the actual
+     * request to contain additional fields beyond those in the expected message.
+     * <p>
+     * <b>Known Limitation:</b> WireMock's {@code equalToJson} with {@code ignoreExtraElements=true}
+     * can be unreliable when multiple stubs exist for the same method (see
+     * <a href="https://github.com/wiremock/wiremock/issues/1230">wiremock/wiremock#1230</a>).
+     * When possible, build your expected request with all fields that will be present in the
+     * actual request to ensure more reliable matching.
+     * <p>
+     * <b>Best Practice:</b> When matching on specific fields (e.g., nodeId and chunkNumber),
+     * ensure your expected request includes ALL fields that must match exactly. WireMock evaluates
+     * stubs and matches the first one where the expected JSON is a subset of the actual JSON.
      *
      * @param messageOrBuilder A built message or builder representing the expected request
      * @return a StringValuePattern that matches the request JSON
@@ -71,6 +84,28 @@ public final class WireMockGrpcCompat {
     public static com.github.tomakehurst.wiremock.matching.StringValuePattern equalToMessage(MessageOrBuilder messageOrBuilder) {
         // Use toJsonWithoutDefaults for request matching to match what gRPC actually sends
         final String json = ProtoJson.toJsonWithoutDefaults(messageOrBuilder);
+        // Use ignoreExtraElements=true to allow actual requests to have additional fields
+        // (e.g., uploadId, data in UploadChunkRequest when we only match on nodeId and chunkNumber)
+        // Note: This can be unreliable with multiple stubs due to WireMock bug #1230
         return com.github.tomakehurst.wiremock.client.WireMock.equalToJson(json, true, false);
+    }
+
+    /**
+     * Create an exact match matcher for a protobuf message.
+     * <p>
+     * This is more precise than {@link #equalToMessage(MessageOrBuilder)} - it requires
+     * an exact match of all fields, with no extra elements allowed.
+     * <p>
+     * Use this when you want to match on the complete request structure, ensuring
+     * predictable behavior when multiple stubs exist for the same method.
+     *
+     * @param messageOrBuilder A built message or builder representing the expected request
+     * @return a StringValuePattern that matches the request JSON exactly
+     */
+    public static com.github.tomakehurst.wiremock.matching.StringValuePattern equalToMessageExact(MessageOrBuilder messageOrBuilder) {
+        // Use toJsonWithoutDefaults for request matching to match what gRPC actually sends
+        final String json = ProtoJson.toJsonWithoutDefaults(messageOrBuilder);
+        // Use ignoreExtraElements=false for exact matching
+        return com.github.tomakehurst.wiremock.client.WireMock.equalToJson(json, false, false);
     }
 }

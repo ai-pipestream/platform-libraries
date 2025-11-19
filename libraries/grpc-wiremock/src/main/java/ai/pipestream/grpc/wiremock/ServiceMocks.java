@@ -145,6 +145,24 @@ public class ServiceMocks {
     }
     
     /**
+     * Get a WireMock gRPC verifier for checking that calls were made.
+     *
+     * @return a WireMockGrpcVerifier instance
+     */
+    public WireMockGrpcVerifier verifier() {
+        return new WireMockGrpcVerifier(wireMockServer);
+    }
+    
+    /**
+     * Get a chunked upload flow helper for managing upload state and mocks.
+     *
+     * @return a ChunkedUploadFlowHelper instance
+     */
+    public ChunkedUploadFlowHelper chunkedUploadFlow() {
+        return new ChunkedUploadFlowHelper(wireMockServer);
+    }
+    
+    /**
      * Reset all mocks to clean state.
      * 
      * <p>Clears all cached mock instances so they will be recreated on next access.
