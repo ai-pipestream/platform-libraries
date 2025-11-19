@@ -52,6 +52,12 @@ dependencies {
         api("ai.pipestream:dynamic-grpc:${version}")
         api("ai.pipestream:dynamic-grpc-registration-clients:${version}")
         api("ai.pipestream:data-util:${version}")
+
+        // Sample documents test data - separate release train
+        api libs.pipestream.sample.doc.types
+        api libs.pipestream.test.documents
+        api libs.pipestream.parser.pipedoc.parsed
+        api libs.pipestream.double.chunked.pipedocs
     }
 }
 

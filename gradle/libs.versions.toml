@@ -35,6 +35,8 @@ memoryfilesystem = "2.8.2"
 # Apache Tika - using 4.0.0-SNAPSHOT for latest features
 #tika = "4.0.0-SNAPSHOT"
 tika4-shaded = "0.1.9"
+# Sample documents test data
+sample-documents = "0.2.2"
 # DJL (Deep Java Library)
 djl = "0.35.0"
 djl-pytorch-jni = "2.7.1-0.35.0"
@@ -174,6 +176,13 @@ vertx-grpc-client = { module = "io.vertx:vertx-grpc-client" }
 vertx-web-client = { module = "io.vertx:vertx-web-client" }
 vertx-consul-client = { module = "io.vertx:vertx-consul-client" }
 tika4-shaded = { module = "ai.pipestream:tika4-shaded", version.ref = "tika4-shaded" }
+
+# Sample documents test data
+pipestream-sample-doc-types = { module = "ai.pipestream:sample-doc-types", version.ref = "sample-documents" }
+pipestream-test-documents = { module = "ai.pipestream:test-documents", version.ref = "sample-documents" }
+pipestream-parser-pipedoc-parsed = { module = "ai.pipestream:parser-pipedoc-parsed", version.ref = "sample-documents" }
+pipestream-double-chunked-pipedocs = { module = "ai.pipestream:double-chunked-pipedocs", version.ref = "sample-documents" }
+
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }
 jandex = { id = "org.kordamp.gradle.jandex", version.ref = "jandex-plugin" }
