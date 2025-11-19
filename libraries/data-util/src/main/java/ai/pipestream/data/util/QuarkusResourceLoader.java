@@ -5,10 +5,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -130,5 +136,81 @@ public class QuarkusResourceLoader {
         }
         LOG.warn("Failed to load resource from any of the paths: {}", (Object[]) possiblePaths);
         return null;
+    }
+
+    /**
+     * Load a test document as raw bytes from the test-documents JAR.
+     * This is a simple wrapper around loadResource() that reads all bytes.
+     * 
+     * @param resourcePath The path to the document (e.g., "sample_image/sample.jpg")
+     * @return The document content as bytes
+     * @throws IOException If the document cannot be loaded
+     */
+    public static byte[] loadTestDocument(String resourcePath) throws IOException {
+        InputStream is = loadResource(resourcePath);
+        if (is == null) {
+            throw new IOException("Document not found: " + resourcePath);
+        }
+        try (is) {
+            return is.readAllBytes();
+        }
+    }
+
+    /**
+     * List all resource paths in a directory from a JAR.
+     * This opens the JAR FileSystem once, walks it, then closes it.
+     * Following the module-parser pattern: open FileSystem once, walk, close.
+     * 
+     * @param resourceDir The directory path in resources (e.g., "sample_image")
+     * @return List of resource paths relative to the directory
+     */
+    public static List<String> listResourcePaths(String resourceDir) {
+        List<String> paths = new ArrayList<>();
+        
+        try {
+            // Remove leading/trailing slashes
+            String cleanPath = resourceDir.replaceAll("^/+|/+$", "");
+            
+            URL resourceUrl = Thread.currentThread().getContextClassLoader().getResource(cleanPath);
+            if (resourceUrl == null) {
+                LOG.debug("Resource directory not found in classpath: {}", cleanPath);
+                return paths;
+            }
+            
+            URI uri = resourceUrl.toURI();
+            
+            // Handle JAR vs filesystem resources
+            if ("jar".equals(uri.getScheme())) {
+                // For JARs, open FileSystem once, walk, then close
+                try (FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+                    Path resourcePath = fileSystem.getPath(cleanPath);
+                    try (Stream<Path> walk = Files.walk(resourcePath)) {
+                        walk.filter(Files::isRegularFile)
+                            .sorted()
+                            .forEach(filePath -> {
+                                Path relativePath = resourcePath.relativize(filePath);
+                                String resourcePathStr = cleanPath + "/" + relativePath.toString().replace('\\', '/');
+                                paths.add(resourcePathStr);
+                            });
+                    }
+                }
+            } else {
+                // For filesystem resources
+                Path resourcePath = Paths.get(uri);
+                try (Stream<Path> walk = Files.walk(resourcePath)) {
+                    walk.filter(Files::isRegularFile)
+                        .sorted()
+                        .forEach(filePath -> {
+                            Path relativePath = resourcePath.relativize(filePath);
+                            String resourcePathStr = cleanPath + "/" + relativePath.toString().replace('\\', '/');
+                            paths.add(resourcePathStr);
+                        });
+                }
+            }
+        } catch (IOException | URISyntaxException e) {
+            LOG.error("Failed to list resources from directory: " + resourceDir, e);
+        }
+        
+        return paths;
     }
 }

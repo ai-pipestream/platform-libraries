@@ -28,6 +28,9 @@ dependencies {
 
     // Testing
     testImplementation libs.quarkus.junit5
+    
+    // Test documents for testing QuarkusResourceLoader
+    testImplementation 'ai.pipestream:test-documents:0.1.1-SNAPSHOT'
 }
 
 java {
