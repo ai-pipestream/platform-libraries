@@ -159,29 +159,33 @@ public class RepositoryServiceMock {
         // This completely avoids WireMock bug #1230 with multiple stubs and ignoreExtraElements.
         // 
         // IMPORTANT: This stub matches ANY UploadChunk request (no request matching).
-        // The template extracts nodeId and chunkNumber from the request dynamically.
+        // The template extracts nodeId, chunkNumber, and isLast from the request dynamically.
         // 
-        // LIMITATION: We always return isFileComplete=false for all chunks.
-        // To check if an upload is complete, use GetUploadStatus() instead.
-        // If you need isFileComplete=true on the last chunk, use mockUploadChunk() for
-        // individual chunks, but be aware of the WireMock bug #1230 limitation.
+        // The isFileComplete field is set based on the isLast field from the request,
+        // which accurately reflects whether this is the final chunk.
+        // If isLast is not set in the request, defaults to false.
         String nodeIdPath = "{{jsonPath request.body '$.nodeId'}}";
         String chunkNumberPath = "{{jsonPath request.body '$.chunkNumber'}}";
         
+        // Use Handlebars conditional to handle isLast: if present and true, return true; otherwise false
+        // Handlebars jsonPath returns empty string for missing fields, so we check for non-empty and 'true'
+        String isFileCompleteTemplate = "{{#if (eq (jsonPath request.body '$.isLast') true)}}true{{else}}false{{/if}}";
+        
         // Single dynamic stub for all chunks - extracts values from request
+        // Use isLast from request to determine isFileComplete (more accurate than comparing chunk numbers)
         String dynamicTemplate = String.format(
             "{ " +
             "\"nodeId\": \"%s\", " +
-            "\"chunkNumber\": \"%s\", " +
+            "\"chunkNumber\": %s, " +
             "\"state\": \"UPLOAD_STATE_UPLOADING\", " +
             "\"bytesUploaded\": 0, " +
-            "\"isFileComplete\": false " +
+            "\"isFileComplete\": %s " +
             "}",
-            nodeIdPath, chunkNumberPath
+            nodeIdPath, chunkNumberPath, isFileCompleteTemplate
         );
         
         // No request matching - matches ANY UploadChunk request.
-        // The template extracts nodeId and chunkNumber from the request dynamically.
+        // The template extracts nodeId, chunkNumber, and isLast from the request dynamically.
         mockService.stubFor(
             method("UploadChunk")
                 .willReturn(jsonTemplate(dynamicTemplate))

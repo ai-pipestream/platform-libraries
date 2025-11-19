@@ -79,15 +79,20 @@ public class ChunkedUploadFlowHelperTest {
 
         // Step 2: Upload 3 chunks
         for (int i = 1; i <= 3; i++) {
+            boolean isLast = (i == 3);
             UploadChunkResponse chunkResponse = uploadService.uploadChunk(
                 UploadChunkRequest.newBuilder()
                     .setNodeId(nodeId)
                     .setUploadId(uploadId)
                     .setChunkNumber(i)
                     .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk-" + i))
+                    .setIsLast(isLast)
                     .build()
             );
             assertThat("Chunk number should match", chunkResponse.getChunkNumber(), is(equalTo((long) i)));
+            // Verify isFileComplete matches isLast
+            assertThat("isFileComplete should match isLast for chunk " + i, 
+                chunkResponse.getIsFileComplete(), is(equalTo(isLast)));
         }
 
         // Step 3: Get upload status (should be COMPLETED)
@@ -125,14 +130,19 @@ public class ChunkedUploadFlowHelperTest {
         );
 
         for (int i = 1; i <= 2; i++) {
-            uploadService.uploadChunk(
+            boolean isLast = (i == 2);
+            UploadChunkResponse chunkResponse = uploadService.uploadChunk(
                 UploadChunkRequest.newBuilder()
                     .setNodeId(ids.nodeId)
                     .setUploadId(ids.uploadId)
                     .setChunkNumber(i)
                     .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk-" + i))
+                    .setIsLast(isLast)
                     .build()
             );
+            // Verify isFileComplete matches isLast
+            assertThat("isFileComplete should match isLast for chunk " + i, 
+                chunkResponse.getIsFileComplete(), is(equalTo(isLast)));
         }
 
         uploadService.getUploadStatus(
@@ -343,14 +353,19 @@ public class ChunkedUploadFlowHelperTest {
 
         // 2. Upload chunks
         for (int i = 1; i <= totalChunks; i++) {
-            uploadService.uploadChunk(
+            boolean isLast = (i == totalChunks);
+            UploadChunkResponse chunkResponse = uploadService.uploadChunk(
                 UploadChunkRequest.newBuilder()
                     .setNodeId(nodeId)
                     .setUploadId(uploadId)
                     .setChunkNumber(i)
                     .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk-" + i))
+                    .setIsLast(isLast)
                     .build()
             );
+            // Verify isFileComplete matches isLast for the last chunk
+            assertThat("isFileComplete should match isLast for chunk " + i, 
+                chunkResponse.getIsFileComplete(), is(equalTo(isLast)));
         }
 
         // 3. Get status

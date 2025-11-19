@@ -83,20 +83,21 @@ public class RepositoryServiceMockFlowTest {
 
         // Step 2: Upload all chunks
         for (int i = 1; i <= totalChunks; i++) {
+            boolean isLast = (i == totalChunks);
             UploadChunkResponse chunkResponse = uploadService.uploadChunk(
                 UploadChunkRequest.newBuilder()
                     .setNodeId(nodeId)
                     .setUploadId(uploadId)
                     .setChunkNumber(i)
                     .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk-" + i))
+                    .setIsLast(isLast)
                     .build()
             );
             assertThat("Chunk number should match", 
                 chunkResponse.getChunkNumber(), is(equalTo((long) i)));
-            // Note: mockUploadChunkDynamic always returns isFileComplete=false to avoid
-            // WireMock bug #1230 with multiple stubs. Use GetUploadStatus to check completion.
-            assertThat("isFileComplete should be false (use GetUploadStatus to check completion)", 
-                chunkResponse.getIsFileComplete(), is(false));
+            // mockUploadChunkDynamic now correctly returns isFileComplete based on isLast field
+            assertThat("isFileComplete should match isLast", 
+                chunkResponse.getIsFileComplete(), is(equalTo(isLast)));
         }
 
         // Step 3: Get upload status (should be COMPLETED)
@@ -141,14 +142,19 @@ public class RepositoryServiceMockFlowTest {
                 .build()
         );
 
-        uploadService.uploadChunk(
+        UploadChunkResponse chunkResponse = uploadService.uploadChunk(
             UploadChunkRequest.newBuilder()
                 .setNodeId(nodeId)
                 .setUploadId(uploadId)
                 .setChunkNumber(1)
                 .setData(com.google.protobuf.ByteString.copyFromUtf8("single-chunk"))
+                .setIsLast(true)  // Single chunk is also the last chunk
                 .build()
         );
+        
+        // Verify isFileComplete is true for the last (and only) chunk
+        assertThat("isFileComplete should be true for last chunk", 
+            chunkResponse.getIsFileComplete(), is(true));
 
         GetUploadStatusResponse statusResponse = uploadService.getUploadStatus(
             GetUploadStatusRequest.newBuilder()
@@ -185,14 +191,19 @@ public class RepositoryServiceMockFlowTest {
         );
 
         for (int i = 1; i <= totalChunks; i++) {
-            uploadService.uploadChunk(
+            boolean isLast = (i == totalChunks);
+            UploadChunkResponse chunkResponse = uploadService.uploadChunk(
                 UploadChunkRequest.newBuilder()
                     .setNodeId(nodeId)
                     .setUploadId(uploadId)
                     .setChunkNumber(i)
                     .setData(com.google.protobuf.ByteString.copyFromUtf8("chunk-" + i))
+                    .setIsLast(isLast)
                     .build()
             );
+            // Verify isFileComplete matches isLast
+            assertThat("isFileComplete should match isLast for chunk " + i, 
+                chunkResponse.getIsFileComplete(), is(equalTo(isLast)));
         }
 
         GetUploadStatusResponse statusResponse = uploadService.getUploadStatus(
