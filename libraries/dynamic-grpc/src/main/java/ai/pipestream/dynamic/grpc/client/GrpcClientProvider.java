@@ -1,13 +1,16 @@
 package ai.pipestream.dynamic.grpc.client;
 import io.grpc.Channel;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.NettyChannelBuilder;
 import ai.pipestream.dynamic.grpc.client.discovery.ServiceDiscovery;
 import io.quarkus.cache.CacheResult;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +42,28 @@ public class GrpcClientProvider {
     @Inject
     ServiceDiscovery serviceDiscovery;
     
+    // gRPC performance configuration - use Quarkus standard properties
+    // Read from quarkus.grpc.clients."*".* properties (wildcard client config)
+    // These match the Quarkus gRPC client configuration properties per the official docs:
+    // https://quarkus.io/guides/grpc-service-consumption
+    private int getFlowControlWindow() {
+        Config config = ConfigProvider.getConfig();
+        return config.getOptionalValue("quarkus.grpc.clients.\"*\".flow-control-window", Integer.class)
+                .orElse(104857600);  // 100MB default
+    }
+    
+    private int getMaxInboundMessageSize() {
+        Config config = ConfigProvider.getConfig();
+        return config.getOptionalValue("quarkus.grpc.clients.\"*\".max-inbound-message-size", Integer.class)
+                .orElse(2147483647);  // 2GB - 1 byte
+    }
+    
+    private int getMaxOutboundMessageSize() {
+        Config config = ConfigProvider.getConfig();
+        return config.getOptionalValue("quarkus.grpc.clients.\"*\".max-outbound-message-size", Integer.class)
+                .orElse(2147483647);  // 2GB - 1 byte
+    }
+    
     // Cache of channels keyed by "host:port"
     private final Map<String, ManagedChannel> channels = new ConcurrentHashMap<>();
     
@@ -55,10 +80,22 @@ public class GrpcClientProvider {
         String key = host + ":" + port;
         
         ManagedChannel channel = channels.computeIfAbsent(key, k -> {
-            LOG.info("Creating new gRPC channel for {}", key);
+            int flowControlWindow = getFlowControlWindow();
+            int maxInboundMessageSize = getMaxInboundMessageSize();
+            int maxOutboundMessageSize = getMaxOutboundMessageSize();
             
-            return ManagedChannelBuilder
+            LOG.info("Creating new gRPC channel for {} with flow control window: {} bytes ({} MB)", 
+                    key, flowControlWindow, flowControlWindow / (1024 * 1024));
+            
+            // Use NettyChannelBuilder to set HTTP/2 initial flow control window
+            // This is CRITICAL for large message performance - the default 64KB window
+            // causes severe throughput bottlenecks (5-10 MB/s instead of 100+ MB/s)
+            // Configuration is read from quarkus.grpc.clients."*".* properties per Quarkus docs
+            // Note: maxOutboundMessageSize is not available on NettyChannelBuilder, only on ManagedChannelBuilder
+            return NettyChannelBuilder
                 .forAddress(host, port)
+                .initialFlowControlWindow(flowControlWindow)  // HTTP/2 initial window size
+                .maxInboundMessageSize(maxInboundMessageSize)
                 .usePlaintext()
                 .build();
         });

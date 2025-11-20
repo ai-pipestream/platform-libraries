@@ -7,6 +7,7 @@ option java_package = "ai.pipestream.repository.filesystem.upload";
 option java_outer_classname = "NodeUploadProto";
 
 import "google/protobuf/any.proto";
+import "core/pipeline_core_types.proto";
 
 enum UploadState {
   UPLOAD_STATE_UNSPECIFIED = 0;
@@ -17,149 +18,27 @@ enum UploadState {
   UPLOAD_STATE_CANCELLED = 5;
 }
 
-enum HashType {
-  HASH_TYPE_UNSPECIFIED = 0;
-  HASH_TYPE_SHA256_BASE64 = 1;  // SHA-256 hash encoded as Base64 (current default)
-  HASH_TYPE_SHA256_HEX = 2;     // SHA-256 hash encoded as hexadecimal
-  HASH_TYPE_MD5_BASE64 = 3;     // MD5 hash encoded as Base64
-  HASH_TYPE_MD5_HEX = 4;        // MD5 hash encoded as hexadecimal
-}
-
-message InitiateUploadRequest {
-  string drive = 1;
-  string parent_id = 2;
-  string name = 3;
-  map<string,string> metadata = 4;
-  int64 expected_size = 5;
-  string mime_type = 6;
-  string connector_id = 7;
-  google.protobuf.Any payload = 8; // For immediate small uploads
-  string client_node_id = 9; // Optional: client-provided ID for deduplication
-  bool fail_if_exists = 10; // Optional: if true, fail if client_node_id already exists (default: false, allow overwrite)
-  string path = 11; // Optional: filesystem path to preserve directory structure (e.g., "docs/2024/reports/")
-}
-
-message InitiateUploadResponse {
-  string node_id = 1;
-  string upload_id = 2;
-  UploadState state = 3;
-  int64 created_at_epoch_ms = 4;
-  bool is_update = 5; // true if this overwrites an existing object
-  string previous_version_id = 6; // S3 version ID of previous version (if is_update=true)
-}
-
-message UploadProgressRequest {
-  string node_id = 1;
-}
-
-message UploadProgressResponse {
-  string node_id = 1;
-  UploadState state = 2;
-  int64 bytes_uploaded = 3;
-  int64 total_bytes = 4;
-  double percent = 5;
-  string error_message = 6;
-  int64 updated_at_epoch_ms = 7;
-  string file_sha = 8;        // File hash for progress tracking
-  HashType hash_type = 9;     // Type of hash algorithm and encoding used
-  string job_id = 10;         // S3 job ID for progress tracking
-}
-
-message UploadChunkRequest {
-  string node_id = 1;
-  string upload_id = 2;
-  bytes data = 3;
-  int64 chunk_number = 4;
-  bool is_last = 5;
-}
-
-message UploadChunkResponse {
-  string node_id = 1;
-  UploadState state = 2;
-  int64 bytes_uploaded = 3;
-  int64 chunk_number = 4;
-  string file_sha = 5;        // File hash for receipt - client knows file was queued successfully
-  HashType hash_type = 6;     // Type of hash algorithm and encoding used
-  string job_id = 7;          // S3 job ID for progress tracking
-  bool is_file_complete = 8;  // True if this is the last chunk of a file
-}
-
-message GetUploadStatusRequest {
-  string node_id = 1;
-}
-
-message GetUploadStatusResponse {
-  string node_id = 1;
-  UploadState state = 2;
-  int64 bytes_uploaded = 3;
-  int64 total_bytes = 4;
-  string error_message = 5;
-  int64 updated_at_epoch_ms = 6;
-}
-
-message CancelUploadRequest {
-  string node_id = 1;
-}
-
-message CancelUploadResponse {
-  string node_id = 1;
-  bool success = 2;
-  string message = 3;
-}
-
-// Batch upload messages for uploading multiple files at once
-message BatchUploadRequest {
-  string drive = 1;
-  string connector_id = 2;
-  string base_path = 3; // Optional: base path for all files (e.g., "documents/2024/")
-  repeated FileUploadItem files = 4;
-  bool fail_on_error = 5; // If true, stop on first error; if false, continue with remaining files
-}
-
-message FileUploadItem {
-  string name = 1; // File name
-  string path = 2; // Relative path from base_path (e.g., "reports/quarterly/")
-  string mime_type = 3;
-  bytes data = 4; // File content
-  string client_node_id = 5; // Optional: client-provided ID
-  map<string,string> metadata = 6;
-}
-
-message BatchUploadResponse {
-  int32 total_files = 1;
-  int32 successful = 2;
-  int32 failed = 3;
-  repeated FileUploadResult results = 4;
-}
-
-message FileUploadResult {
-  string name = 1;
-  string path = 2;
-  string node_id = 3;
-  bool success = 4;
-  string error_message = 5;
-  string s3_key = 6; // Full S3 key including path
-  bool was_update = 7; // True if this overwrote an existing file
-}
+// ============================================
+// REPOSITORY UPLOAD SERVICE
+// Handles efficient storage of documents to S3/MinIO
+// ============================================
 
 service NodeUploadService {
-  // Initiate an upload and get node ID immediately
-  rpc InitiateUpload(InitiateUploadRequest) returns (InitiateUploadResponse);
+  // Simplified unary upload for full PipeDoc
+  // Accepts full payload (up to 2GB) and handles S3 upload internally
+  rpc UploadPipeDoc(ai.pipestream.data.v1.PipeDoc) returns (UploadResponse);
+  
+  // Retrieve document by ID
+  rpc GetDocument(GetDocumentRequest) returns (ai.pipestream.data.v1.PipeDoc);
+}
 
-  // Stream progress updates for an upload
-  rpc StreamUploadProgress(UploadProgressRequest) returns (stream UploadProgressResponse);
+message UploadResponse {
+  bool success = 1;
+  string document_id = 2;    // The ID assigned/used
+  string s3_key = 3;         // Where it was stored
+  string message = 4;
+}
 
-  // Upload a single chunk (unary call - allows parallel chunk uploads)
-  // Client can fire off multiple chunks in parallel without waiting for responses
-  rpc UploadChunk(UploadChunkRequest) returns (UploadChunkResponse);
-
-  // Upload file in chunks (bidirectional streaming)
-  // Client streams chunks, server streams receipts as chunks are queued for S3 upload
-  rpc UploadChunks(stream UploadChunkRequest) returns (stream UploadChunkResponse);
-
-  // Get current upload status (polling fallback)
-  rpc GetUploadStatus(GetUploadStatusRequest) returns (GetUploadStatusResponse);
-
-  // Cancel an in-progress upload
-  rpc CancelUpload(CancelUploadRequest) returns (CancelUploadResponse);
+message GetDocumentRequest {
+  string document_id = 1;
 }

@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package ai.pipestream.connector.intake;
 
-import "google/protobuf/timestamp.proto";
 import "core/pipeline_core_types.proto";
+import "google/protobuf/timestamp.proto";
 
 option java_package = "ai.pipestream.connector.intake";
 option java_multiple_files = true;
@@ -15,28 +15,16 @@ option java_multiple_files = true;
 // ============================================
 
 service ConnectorIntakeService {
-  // Main streaming endpoint - connectors stream documents here (client-side streaming)
-  // Client sends: SessionStart -> Document chunks -> completes stream
-  // Server returns: Single response when all chunks processed
-  rpc StreamDocuments(stream DocumentIntakeRequest) returns (DocumentIntakeResponse);
+  // 1. The "Power User" path: Client sends a full PipeDoc
+  // Best for internal services, advanced connectors, or "Box.com" style integrations
+  // where the client already knows the structure.
+  rpc UploadPipeDoc(UploadPipeDocRequest) returns (UploadResponse);
 
-  // Method 1: Full file upload (unary RPC) - for files up to 2GB
-  // Simple request/response for complete file uploads
-  rpc UploadDocument(UploadDocumentRequest) returns (DocumentResponse);
+  // 2. The "Simple" path: Client sends raw bytes (Blob) + minimal metadata
+  // Best for "I just have a file" scenarios. Intake constructs the PipeDoc wrapper.
+  rpc UploadBlob(UploadBlobRequest) returns (UploadResponse);
 
-  // Method 3: Async chunked upload - Header handshake
-  // Returns upload reference/ID needed for chunks
-  rpc StartChunkedUpload(StartChunkedUploadRequest) returns (StartChunkedUploadResponse);
-
-  // Method 3: Async chunked upload - Individual chunk upload
-  // Can be called out-of-order, as fast as needed, variable chunk sizes
-  rpc UploadAsyncChunk(AsyncChunkedUploadChunkRequest) returns (AsyncChunkedUploadChunkResponse);
-
-  // Method 3: Async chunked upload - Footer completion
-  // Signals all chunks sent, returns chunk status (missing/errored/timeout)
-  rpc CompleteChunkedUpload(CompleteChunkedUploadRequest) returns (CompleteChunkedUploadResponse);
-
-  // Register a new crawl session
+  // Register a new crawl session (Async/Background only)
   rpc StartCrawlSession(StartCrawlSessionRequest) returns (StartCrawlSessionResponse);
 
   // End a crawl session (for cleanup, orphan detection)
@@ -81,134 +69,51 @@ service ConnectorAdminService {
 }
 
 // ============================================
-// DOCUMENT STREAMING (Main Flow)
+// UPLOAD MESSAGES
 // ============================================
 
-message DocumentIntakeRequest {
-  // Session info (set once at stream start)
-  oneof session_info {
-    SessionStart session_start = 1;
-    DocumentData document = 2;
-  }
-}
-
-message SessionStart {
-  string connector_id = 1;        // Pre-registered connector ID
-  string api_key = 2;             // Authentication token
-  string crawl_id = 3;            // Unique crawl/job ID
-  CrawlMetadata crawl_metadata = 4;
-}
-
-message CrawlMetadata {
-  string connector_type = 1;      // "filesystem", "confluence", "database", etc.
-  string connector_version = 2;
-  google.protobuf.Timestamp crawl_started = 3;
-  string source_system = 4;       // Which system we're crawling
-  map<string, string> parameters = 5; // Crawl parameters
-}
-
-message DocumentData {
-  // Source identification
-  string source_id = 1;           // ID in source system (file path, confluence page ID, etc.)
-  string source_parent_id = 2;    // Parent in source system (folder, space, etc.)
-
-  // Document metadata
-  string filename = 3;
-  string path = 4;                // Relative path/hierarchy
-  string mime_type = 5;
-  int64 size_bytes = 6;
-
-  // Source system timestamps
-  google.protobuf.Timestamp source_created = 7;
-  google.protobuf.Timestamp source_modified = 8;
-  google.protobuf.Timestamp source_accessed = 9;
-
-  // Source system metadata
-  string source_author = 10;
-  string source_version = 11;
-  repeated string source_tags = 12;
-  map<string, string> source_metadata = 13;
-
-  // Content
-  oneof content {
-    bytes raw_data = 14;         // For small files (< 5MB)
-    StreamingChunk chunk = 15;   // For large files
-  }
-
-  // Optional client-provided document ID for deduplication
-  string client_document_id = 16;
-
-  // Checksum for validation
-  string checksum = 17;           // SHA-256 or similar
-  string checksum_type = 18;      // "SHA256", "MD5", etc.
-}
-
-message StreamingChunk {
-  string document_ref = 1;        // Reference to correlate chunks
-  int32 chunk_number = 2;
-  bool is_last = 4;
+message UploadPipeDocRequest {
+  string connector_id = 1;
+  string api_key = 2;       // Or JWT
+  string session_id = 3;    // Optional, for grouping
   
-  oneof chunk_type {
-    ai.pipestream.data.v1.Blob header = 3;        // First chunk: Blob with storage_ref
-    bytes raw_data = 5;                         // Middle chunks: Raw file content
-    BlobMetadata footer = 6;                    // Last chunk: Final metadata
-  }
+  // The full document structure, fully loaded
+  ai.pipestream.data.v1.PipeDoc pipe_doc = 4; 
 }
 
-message BlobMetadata {
-  int64 final_size = 1;           // Actual final size
-  string checksum = 2;            // SHA256 of complete file
-  ai.pipestream.data.v1.ChecksumType checksum_type = 3;
-  string s3_key = 4;              // Final S3 object key
-  string s3_etag = 5;             // S3 ETag for verification
-  google.protobuf.Timestamp completed_at = 6;
-  map<string, string> final_metadata = 7;
+message UploadBlobRequest {
+  string connector_id = 1;
+  string api_key = 2;
+  string session_id = 3;
+
+  // Minimal metadata needed to construct a PipeDoc
+  string filename = 4;
+  string mime_type = 5;
+  string path = 6;          // Virtual path (e.g., /folder/file.txt)
+  map<string, string> metadata = 7;
+
+  // The raw content (up to 2GB)
+  bytes content = 8;
 }
 
-message DocumentIntakeResponse {
-  oneof response {
-    SessionStartResponse session_response = 1;
-    DocumentResponse document_response = 2;
-    BatchDocumentResponse batch_response = 3;  // For client-streaming: summary of all documents
-  }
-}
-
-// Response when client finishes streaming all documents
-message BatchDocumentResponse {
-  string session_id = 1;
-  int32 total_documents = 2;
-  int32 successful = 3;
-  int32 failed = 4;
-  repeated DocumentResponse results = 5;  // Individual results for each document
-  string message = 6;
-}
-
-message SessionStartResponse {
-  bool authenticated = 1;
-  string session_id = 2;
+message UploadResponse {
+  bool success = 1;
+  string doc_id = 2;        // The ID assigned by Repo Service
   string message = 3;
-
-  // Server returns enriched config
-  ConnectorConfig config = 4;
 }
+
+// ============================================
+// CONNECTOR CONFIG
+// Simplified config returned after validation
+// ============================================
 
 message ConnectorConfig {
-  string account_id = 1;          // Account this connector belongs to
-  string s3_bucket = 2;           // Where documents will be stored
-  string s3_base_path = 3;        // Base path in S3
-  int64 max_file_size = 4;        // Max file size allowed
+  string account_id = 1;
+  string s3_bucket = 2;
+  string s3_base_path = 3;
+  int64 max_file_size = 4;
   int64 rate_limit_per_minute = 5;
-  map<string, string> default_metadata = 6; // Metadata to add to all docs
-}
-
-message DocumentResponse {
-  string source_id = 1;           // Echo back for correlation
-  string document_id = 2;          // Assigned document ID
-  string s3_key = 3;              // Where it was stored
-  bool success = 4;
-  string error_message = 5;
-  bool was_update = 6;            // True if document already existed
-  string previous_version = 7;    // Previous version if updated
+  map<string, string> default_metadata = 6;
 }
 
 // ============================================
@@ -237,6 +142,14 @@ message EndCrawlSessionRequest {
   string session_id = 1;
   string crawl_id = 2;
   CrawlSummary summary = 3;
+}
+
+message CrawlMetadata {
+  string connector_type = 1;      // "filesystem", "confluence", "database", etc.
+  string connector_version = 2;
+  google.protobuf.Timestamp crawl_started = 3;
+  string source_system = 4;       // Which system we're crawling
+  map<string, string> parameters = 5; // Crawl parameters
 }
 
 message CrawlSummary {
@@ -443,111 +356,4 @@ message CrawlSessionSummary {
   int64 bytes_processed = 8;
   string status = 9;              // "RUNNING", "COMPLETED", "FAILED"
   map<string, string> metadata = 10;
-}
-
-// ============================================
-// METHOD 1: FULL FILE UPLOAD (Unary RPC)
-// ============================================
-
-message UploadDocumentRequest {
-  // Authentication
-  string connector_id = 1;
-  string api_key = 2;
-  string session_id = 3;          // Optional: if provided, use existing session
-  
-  // Document data (full file in raw_data)
-  DocumentData document = 4;
-}
-
-// ============================================
-// METHOD 3: ASYNC CHUNKED UPLOAD
-// ============================================
-
-// Header: Start chunked upload - returns upload reference
-message StartChunkedUploadRequest {
-  // Authentication
-  string connector_id = 1;
-  string api_key = 2;
-  string session_id = 3;          // Optional: if provided, use existing session
-  
-  // Document metadata
-  string source_id = 4;           // ID in source system
-  string filename = 5;
-  string path = 6;                // Relative path/hierarchy
-  string mime_type = 7;
-  int64 expected_size_bytes = 8;  // Expected total size (0 if unknown)
-  
-  // Optional hints for chunking
-  int32 expected_chunk_count = 9; // Expected number of chunks (0 if unknown)
-  int64 expected_chunk_size = 10; // Expected average chunk size (0 if unknown)
-  
-  // Source system metadata
-  google.protobuf.Timestamp source_created = 11;
-  google.protobuf.Timestamp source_modified = 12;
-  map<string, string> source_metadata = 13;
-}
-
-message StartChunkedUploadResponse {
-  // Indicates if the upload was successfully initiated
-  bool success = 1;
-  
-  // Upload reference/ID needed for subsequent chunk uploads
-  string upload_id = 2;
-  
-  // Human-readable message about the upload initiation
-  string message = 3;
-  
-  // Recommended maximum chunk size in bytes (server hint to client)
-  int64 max_chunk_size = 4;
-  
-  // Timeout in seconds for chunk uploads (after which chunks may expire)
-  int32 timeout_seconds = 5;
-}
-
-// Chunk: Upload individual chunk (async chunked upload)
-message AsyncChunkedUploadChunkRequest {
-  string upload_id = 1;           // From StartChunkedUploadResponse
-  int32 chunk_number = 2;         // Ordering information (0-based)
-  bytes chunk_data = 3;            // Variable chunk size
-  int64 chunk_size_bytes = 4;     // Size of this chunk
-}
-
-message AsyncChunkedUploadChunkResponse {
-  // Indicates if the chunk was successfully queued
-  bool success = 1;
-  
-  // Upload ID this chunk belongs to
-  string upload_id = 2;
-  
-  // Chunk number (0-based) that was uploaded
-  int32 chunk_number = 3;
-  
-  // Human-readable message about the chunk upload status
-  string message = 4;
-}
-
-// Footer: Complete chunked upload
-message CompleteChunkedUploadRequest {
-  string upload_id = 1;           // From StartChunkedUploadResponse
-  string final_sha256 = 2;        // Final SHA256 from sender
-  int64 final_size_bytes = 3;      // Final total size
-  int32 total_chunks_sent = 4;     // Total number of chunks sent
-}
-
-message CompleteChunkedUploadResponse {
-  bool success = 1;
-  string upload_id = 2;
-  string document_id = 3;         // Final document ID after reassembly
-  string s3_key = 4;              // Where document was stored
-  string message = 5;
-  
-  // Chunk status information
-  repeated int32 missing_chunks = 6;      // Chunk numbers that are missing
-  repeated int32 errored_chunks = 7;       // Chunk numbers that errored
-  repeated int32 timeout_chunks = 8;       // Chunk numbers that timed out
-  repeated int32 needs_resend_chunks = 9; // Chunk numbers that need re-sending
-  
-  // Final upload result
-  string final_sha256 = 10;       // Server-calculated SHA256
-  int64 final_size_bytes = 11;    // Final size after reassembly
 }

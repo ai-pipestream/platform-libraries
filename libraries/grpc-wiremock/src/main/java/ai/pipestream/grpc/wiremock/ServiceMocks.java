@@ -11,7 +11,6 @@ public class ServiceMocks {
     private final WireMockServer wireMockServer;
     private PlatformRegistrationMock platformRegistrationMock;
     private AccountManagerMock accountManagerMock;
-    private RepositoryServiceMock repositoryServiceMock;
     private ConnectorServiceMock connectorServiceMock;
     private SimpleServiceMock mappingServiceMock;
     private SimpleServiceMock engineServiceMock;
@@ -49,19 +48,7 @@ public class ServiceMocks {
         }
         return accountManagerMock;
     }
-    
-    /**
-     * Get or create the Repository Service mock.
-     *
-     * @return the RepositoryServiceMock instance
-     */
-    public RepositoryServiceMock repository() {
-        if (repositoryServiceMock == null) {
-            repositoryServiceMock = new RepositoryServiceMock(wireMockServer.port());
-        }
-        return repositoryServiceMock;
-    }
-    
+
     /**
      * Get or create the Connector Service mock.
      *
@@ -125,10 +112,7 @@ public class ServiceMocks {
         accountManager()
             .mockCreateAccount("default-account", "Default Account", "Default test account")
             .mockGetAccount("default-account", "Default Account", "Default test account", true);
-            
-        repository()
-            .setupDefaults();
-            
+
         connector()
             .mockValidateApiKey("default-connector", "default-api-key", "default-account");
             
@@ -154,15 +138,6 @@ public class ServiceMocks {
     }
     
     /**
-     * Get a chunked upload flow helper for managing upload state and mocks.
-     *
-     * @return a ChunkedUploadFlowHelper instance
-     */
-    public ChunkedUploadFlowHelper chunkedUploadFlow() {
-        return new ChunkedUploadFlowHelper(wireMockServer);
-    }
-    
-    /**
      * Reset all mocks to clean state.
      * 
      * <p>Clears all cached mock instances so they will be recreated on next access.
@@ -173,7 +148,6 @@ public class ServiceMocks {
         // Recreate mocks to reset state
         platformRegistrationMock = null;
         accountManagerMock = null;
-        repositoryServiceMock = null;
         connectorServiceMock = null;
         mappingServiceMock = null;
         engineServiceMock = null;
