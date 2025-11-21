@@ -96,9 +96,8 @@ public class GrpcServerFlowControlCustomizer implements ServerBuilderCustomizer 
     public void customize(GrpcServerConfiguration config, ServerBuilder builder) {
         // Only handle VertxServerBuilder (when use-separate-server=true)
         // VertxServerBuilder wraps NettyServerBuilder which supports flow control window
-        if (builder instanceof VertxServerBuilder) {
-            VertxServerBuilder vertxBuilder = (VertxServerBuilder) builder;
-            
+        if (builder instanceof VertxServerBuilder vertxBuilder) {
+
             // Read flow control window from config
             // Property: quarkus.grpc.server.flow-control-window
             int flowControlWindow = ConfigProvider.getConfig()
