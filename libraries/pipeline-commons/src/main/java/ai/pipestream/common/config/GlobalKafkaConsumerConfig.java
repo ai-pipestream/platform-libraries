@@ -1,9 +1,11 @@
 package ai.pipestream.common.config;
 
+import io.quarkus.arc.Unremovable;
 import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import org.apache.kafka.common.serialization.UUIDDeserializer;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +19,7 @@ import java.util.Map;
  * 2. "TopicIdStrategy" - Automates Schema lookup based on Topic Name.
  * 3. Reliability (No auto-commit, earliest offset).
  */
+@Unremovable
 @ApplicationScoped
 public class GlobalKafkaConsumerConfig {
 
