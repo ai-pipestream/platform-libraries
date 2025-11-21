@@ -47,9 +47,16 @@ public class PipelineKafkaConfigSource implements ConfigSource {
         // APICURIO CONFIGURATION
         CONFIG.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.artifact-resolver-strategy", 
                    "io.apicurio.registry.serde.strategy.TopicIdStrategy");
+        // Auto-register schemas by default (useful for dev/test)
         CONFIG.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.auto-register", "true");
+        
+        // Explicitly set artifact type (though ProtobufSerializer implies it, this is safer)
+        CONFIG.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.artifact-type", "PROTOBUF");
+        
+        // Find latest schema version if not specified (critical for consumers in dynamic environments)
+        CONFIG.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.serde.find-latest", "true");
 
-        // APICURIO REGISTRY URL
+        // --- APICURIO REGISTRY URL ---
         String registryUrl = System.getProperty("APICURIO_REGISTRY_URL");
         if (registryUrl == null || registryUrl.isEmpty()) {
             registryUrl = "http://localhost:8081/apis/registry/v3";
