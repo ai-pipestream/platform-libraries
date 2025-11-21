@@ -6,6 +6,7 @@ import ai.pipestream.platform.registration.ServiceRegistered;
 import ai.pipestream.platform.registration.ServiceUnregistered;
 import ai.pipestream.repository.account.AccountEvent;
 import ai.pipestream.repository.filesystem.DriveUpdateNotification;
+import ai.pipestream.repository.filesystem.RepositoryEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -62,6 +63,13 @@ public class KafkaProtobufKeys {
      */
     public static UUID uuid(ModuleUnregistered event) {
         return uuidFrom(event.getServiceId());
+    }
+
+    /**
+     * Generates a deterministic UUID key for RepositoryEvent based on Document ID.
+     */
+    public static UUID uuid(RepositoryEvent event) {
+        return uuidFrom(event.getDocumentId());
     }
 
     private static UUID uuidFrom(String id) {
