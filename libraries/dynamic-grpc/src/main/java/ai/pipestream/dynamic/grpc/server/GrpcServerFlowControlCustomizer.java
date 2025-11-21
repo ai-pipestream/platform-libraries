@@ -75,7 +75,7 @@ public class GrpcServerFlowControlCustomizer implements ServerBuilderCustomizer 
     
     /**
      * Default flow control window: 100MB (104857600 bytes).
-     * 
+     * <p>
      * This provides excellent throughput for messages up to 250MB while maintaining
      * reasonable memory usage. For larger messages (500MB+), consider increasing
      * to 250MB or 500MB.

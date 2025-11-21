@@ -4,7 +4,6 @@ import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import org.apache.kafka.common.serialization.UUIDSerializer;
-
 import java.util.HashMap;
 import java.util.Map;
 
