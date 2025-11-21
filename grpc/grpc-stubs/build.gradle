@@ -22,6 +22,16 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+    withJavadocJar()
+    withSourcesJar()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += file("build/classes/java/quarkus-generated-sources/grpc")
+        }
+    }
 }
 
 test {
@@ -93,6 +103,10 @@ idea {
 
 // Ensure generated sources are available before IntelliJ indexes
 tasks.named('ideaModule') {
+    dependsOn 'quarkusGenerateCode'
+}
+
+tasks.named('sourcesJar', Jar) {
     dependsOn 'quarkusGenerateCode'
 }
 
