@@ -13,13 +13,6 @@ scmVersion {
         aheadOfRemote = false
         snapshotDependencies = false
     }
-    // Use SNAPSHOT for non-release versions instead of branch names
-    versionCreator { version, position ->
-        if (position.branch == 'main' || position.branch == 'master') {
-            return version
-        }
-        return "${version}-SNAPSHOT".toString()
-    }
 }
 
 allprojects {
