@@ -13,9 +13,9 @@ import java.util.Map;
  * Use this via: mp.messaging.incoming.[channel].kafka-configuration=pipestream-consumer
  * <p>
  * Enforces:
- * 1. UUID Deserialization (Matches the Producer).
- * 2. Protobuf Deserialization (Apicurio).
- * 3. "Earliest" offset reset (Critical for the "Rewind" capability).
+ * 1. UUID/Protobuf Deserialization.
+ * 2. "TopicIdStrategy" - Automates Schema lookup based on Topic Name.
+ * 3. Reliability (No auto-commit, earliest offset).
  */
 @ApplicationScoped
 public class GlobalKafkaConsumerConfig {
@@ -35,17 +35,18 @@ public class GlobalKafkaConsumerConfig {
         // --- APICURIO CONFIG ---
         String registryUrl = System.getProperty("APICURIO_REGISTRY_URL", "http://localhost:8081/apis/registry/v3");
         props.put("apicurio.registry.url", registryUrl);
-        
-        // specific.return.type is NOT set here globally because 
-        // it varies per consumer (AccountEvent.class vs PipeDoc.class).
-        // That remains in application.properties or the @Incoming annotation.
+
+        // --- AUTOMATION STRATEGY (The Simplifier) ---
+        // Tells consumer to look up schema 'topic-name-value' automatically.
+        // Example: Topic "account-events" -> Artifact "account-events-value"
+        props.put("apicurio.registry.artifact-resolver-strategy",
+                "io.apicurio.registry.serde.strategy.TopicIdStrategy");
 
         // --- REWIND & RELIABILITY ---
-        // "latest": If we restart a consumer group, read from the newest message
         // "earliest": If we create a new consumer group (e.g. for a full re-index),
         // start from the beginning of the topic, not the end.
         props.put("auto.offset.reset", "earliest");
-        
+
         // Disable auto-commit to ensure we process the data (s3 download etc) 
         // before acknowledging. We control this in code.
         props.put("enable.auto.commit", "false");
