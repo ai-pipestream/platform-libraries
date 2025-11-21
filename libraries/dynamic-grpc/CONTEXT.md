@@ -31,8 +31,20 @@ The `engine:dynamic-grpc` module provides dynamic service discovery and gRPC cli
    - Generic provider supporting any Mutiny stub type
    - Uses reflection to create stubs dynamically
    - Enables type-safe client creation without compile-time dependencies
+   - **Client-side flow control optimization**: Automatically configures HTTP/2 flow control window
+     from `quarkus.grpc.clients."*".flow-control-window` (default: 100MB) for high throughput
 
-5. **RandomLoadBalancer**
+5. **GrpcServerFlowControlCustomizer**
+   - Server-side flow control window optimization via `ServerBuilderCustomizer`
+   - Automatically discovered by Quarkus CDI (@ApplicationScoped)
+   - Reads configuration from `quarkus.grpc.server.flow-control-window` (default: 100MB)
+   - **Critical for large message performance**: Increases throughput from 5-10 MB/s to 250-370 MB/s
+   - **⚠️ IMPORTANT**: Requires `quarkus.grpc.server.use-separate-server=true` (Netty-based server)
+     - The unified Vert.x HTTP server (`use-separate-server=false`) does NOT expose flow control window settings
+     - If `use-separate-server=false`, the customizer will log a warning and the setting will be ignored
+   - See [GRPC_PERFORMANCE_OPTIMIZATION.md](GRPC_PERFORMANCE_OPTIMIZATION.md) for details
+
+6. **RandomLoadBalancer**
    - Simple random selection implementation of Stork's LoadBalancer
    - Used by DynamicConsulServiceDiscovery for instance selection
 
