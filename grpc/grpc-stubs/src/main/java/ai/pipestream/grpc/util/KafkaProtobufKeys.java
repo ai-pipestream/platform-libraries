@@ -5,6 +5,7 @@ import ai.pipestream.platform.registration.ModuleUnregistered;
 import ai.pipestream.platform.registration.ServiceRegistered;
 import ai.pipestream.platform.registration.ServiceUnregistered;
 import ai.pipestream.repository.account.AccountEvent;
+import ai.pipestream.repository.filesystem.DriveUpdateNotification;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -19,6 +20,13 @@ public class KafkaProtobufKeys {
 
     private KafkaProtobufKeys() {
         // Utility class
+    }
+
+    /**
+     * Generates a deterministic UUID key for DriveUpdateNotification based on Drive Name.
+     */
+    public static UUID uuid(DriveUpdateNotification event) {
+        return uuidFrom(event.getDrive().getName());
     }
 
     /**
