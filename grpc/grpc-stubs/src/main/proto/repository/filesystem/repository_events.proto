@@ -44,6 +44,7 @@ message RepositoryEvent {
     int64 size = 2;              // File size in bytes
     string content_hash = 3;     // SHA-256 for deduplication
     string s3_version_id = 4;    // S3 version for this creation
+    string bucket_name = 5;      // S3 Bucket Name
   }
   
   // Minimal metadata for updates
@@ -53,6 +54,7 @@ message RepositoryEvent {
     string content_hash = 3;     // New SHA-256 hash
     string s3_version_id = 4;    // New S3 version
     string previous_version_id = 5; // What we replaced
+    string bucket_name = 6;      // S3 Bucket Name
   }
   
   // Minimal reason for deletion
