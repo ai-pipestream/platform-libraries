@@ -63,3 +63,49 @@ If configuration seems missing:
 1.  Check that `pipeline-commons` is in your classpath.
 2.  Verify that `PipelineKafkaConfigSource` is registered in `META-INF/services/org.eclipse.microprofile.config.spi.ConfigSource`.
 3.  Run `./gradlew dependencies` to ensure you aren't pulling an old version of `pipeline-commons`.
+
+## Testing Configuration
+
+For integration tests, we **DO NOT** rely on the default Quarkus Kafka DevServices (which spins up a random container). Instead, we use a deterministic approach with Docker Compose and programmatic configuration.
+
+### 1. Infrastructure (`compose-test-services.yml`)
+Define your test infrastructure (Redpanda, Apicurio, etc.) in a `src/test/resources/compose-test-services.yml` file. Ensure you expose the ports and label them for Quarkus if needed, but the programmatic approach below gives you more control.
+
+### 2. Programmatic Configuration (`KafkaTestResource`)
+Create a `QuarkusTestResourceLifecycleManager` to explicitly wire your test to the Docker Compose services. This avoids "magic" port mapping issues.
+
+**Example `KafkaTestResource.java`:**
+```java
+public class KafkaTestResource implements QuarkusTestResourceLifecycleManager {
+    @Override
+    public Map<String, String> start() {
+        Map<String, String> config = new HashMap<>();
+        // 1. Disable default DevServices to prevent conflicts
+        config.put("quarkus.kafka.devservices.enabled", "false");
+        
+        // 2. Point to your Compose service (e.g., localhost:9095)
+        config.put("kafka.bootstrap.servers", "localhost:9095");
+        
+        // 3. Point to Apicurio
+        config.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.url", "http://localhost:8082/apis/registry/v3");
+        
+        // 4. Configure Channels (Explicitly map channels to topics if needed)
+        config.put("mp.messaging.outgoing.my-channel-out.connector", "smallrye-kafka");
+        config.put("mp.messaging.outgoing.my-channel-out.topic", "my-topic");
+        
+        return config;
+    }
+
+    @Override
+    public void stop() { /* Managed by Compose */ }
+}
+```
+
+### 3. Usage in Test
+Annotate your test class:
+
+```java
+@QuarkusTest
+@QuarkusTestResource(KafkaTestResource.class)
+public class MyConsumerTest { ... }
+```

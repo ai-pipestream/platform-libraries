@@ -16,6 +16,7 @@ dependencies {
     annotationProcessor 'io.quarkus:quarkus-extension-processor'
 
     // Test dependencies
+    implementation 'io.quarkus:quarkus-test-common'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.hamcrest:hamcrest'
