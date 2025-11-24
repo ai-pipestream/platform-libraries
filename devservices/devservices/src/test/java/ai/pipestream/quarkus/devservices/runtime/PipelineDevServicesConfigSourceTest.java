@@ -68,14 +68,22 @@ class PipelineDevServicesConfigSourceTest {
 
         Set<String> names = configSource.getPropertyNames();
 
-        assertThat(names, hasSize(6));
+        assertThat(names, hasSize(12));
         assertThat(names, containsInAnyOrder(
+            // Compose devservices configuration properties
             "quarkus.compose.devservices.enabled",
             "quarkus.compose.devservices.files",
             "quarkus.compose.devservices.project-name",
             "quarkus.compose.devservices.start-services",
             "quarkus.compose.devservices.stop-services",
-            "quarkus.compose.devservices.reuse-project-for-tests"
+            "quarkus.compose.devservices.reuse-project-for-tests",
+            // Auto-injected service connection properties
+            "quarkus.devservices.launch-on-shared-network",
+            "mp.messaging.connector.smallrye-kafka.apicurio.registry.url",
+            "opensearch.hosts",
+            "CONSUL_HOST",
+            "CONSUL_PORT",
+            "quarkus.otel.exporter.otlp.endpoint"
         ));
     }
 

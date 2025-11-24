@@ -178,6 +178,14 @@ class PipelineDevServicesProcessor {
             composeConfig.put(COMPOSE_CONFIG_PREFIX + "reuse-project-for-tests",
                     Boolean.toString(DEFAULT_REUSE_PROJECT_FOR_TESTS));
 
+            // Add DevServices configuration for shared network
+            // This enables Kafka DevServices to use internal container hostnames instead of port mapping
+            composeConfig.put("kafka.bootstrap.servers", "localhost:9094");
+            composeConfig.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.url",
+                    "http://localhost:8081/apis/registry/v3");
+
+
+
             applyPipelineSystemProperties(composeConfig);
             updateComposeConfigBuilder(composeFileAbsolutePath, projectName);
 
