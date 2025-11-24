@@ -8,7 +8,7 @@ logging-manager = "3.4.1"
 opensearch = "3.3.0"
 httpclient5 = "5.5.1"
 # gRPC and Protobuf versions - match Quarkus defaults
-grpc = "1.76.0"
+grpc = "1.77.0"
 protobuf = "4.33.1"
 
 # Quarkiverse extensions
