@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 public class KafkaIntegrationTest {
 
+    private static final String TEST_TOPIC = "test-topic-v1";
+
     // Configure separate channels for outgoing and incoming to properly test direction detection.
     // The heuristic in PipelineKafkaConfigSource detects direction based on channel name:
     // - Channels with "in" or "consumer" in the name -> incoming
@@ -23,9 +25,9 @@ public class KafkaIntegrationTest {
     // Both channels point to the same Kafka topic to test end-to-end communication.
     static {
         // "test-producer" has no "in" or "consumer" -> detected as outgoing
-        System.setProperty("PIPELINE_TOPIC_TEST_PRODUCER", "test-topic-v1");
+        System.setProperty("PIPELINE_TOPIC_TEST_PRODUCER", TEST_TOPIC);
         // "test-consumer" contains "consumer" -> detected as incoming
-        System.setProperty("PIPELINE_TOPIC_TEST_CONSUMER", "test-topic-v1");
+        System.setProperty("PIPELINE_TOPIC_TEST_CONSUMER", TEST_TOPIC);
     }
 
     @Inject
