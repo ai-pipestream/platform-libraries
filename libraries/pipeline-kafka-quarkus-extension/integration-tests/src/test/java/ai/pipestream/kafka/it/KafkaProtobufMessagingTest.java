@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Integration test demonstrating the pipeline-messaging Quarkus extension.
- *
+ * <p>
  * This test verifies that:
  * 1. Protobuf messages can be sent to Kafka topics
  * 2. The extension auto-configures serializers/deserializers for protobuf types
  * 3. Messages are correctly serialized and deserialized end-to-end
- *
+ * <p>
  * This serves as a reference implementation for using the extension.
  */
 @QuarkusTest

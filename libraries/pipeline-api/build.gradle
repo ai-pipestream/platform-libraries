@@ -14,7 +14,6 @@ dependencies {
     implementation libs.quarkus.jackson
     implementation libs.quarkus.hibernate.validator
     implementation libs.quarkus.smallrye.openapi
-    implementation libs.quarkus.cache
 
     // Testing
     testImplementation libs.quarkus.junit5

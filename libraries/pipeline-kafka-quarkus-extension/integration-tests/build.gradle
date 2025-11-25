@@ -32,3 +32,4 @@ tasks.withType(PublishToMavenRepository).configureEach {
 tasks.withType(PublishToMavenLocal).configureEach {
     enabled = false
 }
+

@@ -301,3 +301,4 @@ target
 *.iml
 *.ipr
 /grpc-wiremock/src/test/resources/META-INF/grpc/services.dsc
+bin
