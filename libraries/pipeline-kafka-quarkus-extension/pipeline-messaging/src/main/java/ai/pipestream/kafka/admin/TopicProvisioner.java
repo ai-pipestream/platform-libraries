@@ -100,22 +100,18 @@ public class TopicProvisioner {
             return Boolean.parseBoolean(stringValue);
         }
         
-        // Try numeric types - first check if it looks like a number
+        // Try numeric types - Integer first, then Long for larger values
         try {
-            // Try Integer first
             return Integer.parseInt(stringValue);
         } catch (NumberFormatException ignored) {
-            // Try Long if Integer fails (number too large)
             try {
                 return Long.parseLong(stringValue);
-            } catch (NumberFormatException ignored2) {
-                // Try Double for floating point values
+            } catch (NumberFormatException ignored1) {
+                // Try Double for floating point values (handles scientific notation too)
                 try {
-                    if (stringValue.contains(".") || stringValue.toLowerCase().contains("e")) {
-                        return Double.parseDouble(stringValue);
-                    }
-                } catch (NumberFormatException ignored3) {
-                    // Not a double
+                    return Double.parseDouble(stringValue);
+                } catch (NumberFormatException ignored2) {
+                    // Not a numeric type
                 }
             }
         }
