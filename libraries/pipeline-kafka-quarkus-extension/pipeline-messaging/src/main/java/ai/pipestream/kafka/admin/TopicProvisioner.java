@@ -24,7 +24,8 @@ public class TopicProvisioner {
         // bootstrap.servers)
         for (String prop : config.getPropertyNames()) {
             if (prop.startsWith("kafka.")) {
-                adminConfig.put(prop.substring(6), config.getValue(prop, String.class));
+                String key = prop.substring(6);
+                adminConfig.put(key, getTypedConfigValue(prop));
             }
         }
 
@@ -34,7 +35,8 @@ public class TopicProvisioner {
         String smallryePrefix = "mp.messaging.connector.smallrye-kafka.";
         for (String prop : config.getPropertyNames()) {
             if (prop.startsWith(smallryePrefix)) {
-                adminConfig.put(prop.substring(smallryePrefix.length()), config.getValue(prop, String.class));
+                String key = prop.substring(smallryePrefix.length());
+                adminConfig.put(key, getTypedConfigValue(prop));
             }
         }
 
@@ -83,5 +85,39 @@ public class TopicProvisioner {
             System.err.println("Warning: Could not auto-provision topics: " + e.getMessage());
             e.printStackTrace(System.err);
         }
+    }
+
+    /**
+     * Attempts to convert a configuration property to its appropriate type.
+     * Kafka AdminClient configurations may require Integer, Long, or Boolean types
+     * rather than Strings. This method tries to parse the value to the most
+     * appropriate type, falling back to String if no conversion applies.
+     */
+    private Object getTypedConfigValue(String prop) {
+        String stringValue = config.getValue(prop, String.class);
+        
+        // Try Boolean
+        if ("true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue)) {
+            return Boolean.parseBoolean(stringValue);
+        }
+        
+        // Try numeric types - Integer first, then Long for larger values
+        try {
+            return Integer.parseInt(stringValue);
+        } catch (NumberFormatException ignored) {
+            try {
+                return Long.parseLong(stringValue);
+            } catch (NumberFormatException ignored1) {
+                // Try Double for floating point values (handles scientific notation too)
+                try {
+                    return Double.parseDouble(stringValue);
+                } catch (NumberFormatException ignored2) {
+                    // Not a numeric type
+                }
+            }
+        }
+        
+        // Return as String (Kafka's AbstractConfig can handle string conversion)
+        return stringValue;
     }
 }
