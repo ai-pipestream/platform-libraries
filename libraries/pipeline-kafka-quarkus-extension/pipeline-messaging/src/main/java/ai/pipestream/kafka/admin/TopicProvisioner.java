@@ -81,6 +81,7 @@ public class TopicProvisioner {
         } catch (Exception e) {
             // Log warning but don't crash (Kafka might be down temporarily)
             System.err.println("Warning: Could not auto-provision topics: " + e.getMessage());
+            e.printStackTrace(System.err);
         }
     }
 }
