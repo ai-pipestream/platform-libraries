@@ -24,7 +24,8 @@ public class TopicProvisioner {
         // bootstrap.servers)
         for (String prop : config.getPropertyNames()) {
             if (prop.startsWith("kafka.")) {
-                adminConfig.put(prop.substring(6), config.getValue(prop, String.class));
+                String key = prop.substring(6);
+                adminConfig.put(key, getTypedConfigValue(prop));
             }
         }
 
@@ -34,7 +35,8 @@ public class TopicProvisioner {
         String smallryePrefix = "mp.messaging.connector.smallrye-kafka.";
         for (String prop : config.getPropertyNames()) {
             if (prop.startsWith(smallryePrefix)) {
-                adminConfig.put(prop.substring(smallryePrefix.length()), config.getValue(prop, String.class));
+                String key = prop.substring(smallryePrefix.length());
+                adminConfig.put(key, getTypedConfigValue(prop));
             }
         }
 
@@ -82,5 +84,43 @@ public class TopicProvisioner {
             // Log warning but don't crash (Kafka might be down temporarily)
             System.err.println("Warning: Could not auto-provision topics: " + e.getMessage());
         }
+    }
+
+    /**
+     * Attempts to convert a configuration property to its appropriate type.
+     * Kafka AdminClient configurations may require Integer, Long, or Boolean types
+     * rather than Strings. This method tries to parse the value to the most
+     * appropriate type, falling back to String if no conversion applies.
+     */
+    private Object getTypedConfigValue(String prop) {
+        String stringValue = config.getValue(prop, String.class);
+        
+        // Try Boolean
+        if ("true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue)) {
+            return Boolean.parseBoolean(stringValue);
+        }
+        
+        // Try numeric types - first check if it looks like a number
+        try {
+            // Try Integer first
+            return Integer.parseInt(stringValue);
+        } catch (NumberFormatException ignored) {
+            // Try Long if Integer fails (number too large)
+            try {
+                return Long.parseLong(stringValue);
+            } catch (NumberFormatException ignored2) {
+                // Try Double for floating point values
+                try {
+                    if (stringValue.contains(".") || stringValue.toLowerCase().contains("e")) {
+                        return Double.parseDouble(stringValue);
+                    }
+                } catch (NumberFormatException ignored3) {
+                    // Not a double
+                }
+            }
+        }
+        
+        // Return as String (Kafka's AbstractConfig can handle string conversion)
+        return stringValue;
     }
 }
