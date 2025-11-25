@@ -6,7 +6,6 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutionException;
@@ -17,20 +16,21 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 public class KafkaIntegrationTest {
 
-    // We need to simulate the env var for the topic
+    // Configure separate channels for outgoing and incoming to properly test direction detection.
+    // The heuristic in PipelineKafkaConfigSource detects direction based on channel name:
+    // - Channels with "in" or "consumer" in the name -> incoming
+    // - Other channels -> outgoing
+    // Both channels point to the same Kafka topic to test end-to-end communication.
     static {
-        System.setProperty("PIPELINE_TOPIC_TEST_TOPIC", "test-topic-v1");
+        // "test-producer" has no "in" or "consumer" -> detected as outgoing
+        System.setProperty("PIPELINE_TOPIC_TEST_PRODUCER", "test-topic-v1");
+        // "test-consumer" contains "consumer" -> detected as incoming
+        System.setProperty("PIPELINE_TOPIC_TEST_CONSUMER", "test-topic-v1");
     }
 
     @Inject
-    @Channel("test-topic")
+    @Channel("test-producer")
     Emitter<ValidationWarning> emitter;
-
-    // We need a consumer to verify the message
-    // Since we can't easily dynamically add @Incoming methods in a test class without it being a bean,
-    // we might need a separate bean or use a mock.
-    // But we want to test the "Zero Config" aspect which infers from @Incoming.
-    // So we should define a static inner class or a separate class bean.
     
     @Inject
     TestConsumer consumer;
@@ -53,7 +53,9 @@ public class KafkaIntegrationTest {
         private final CompletableFuture<ValidationWarning> received = new CompletableFuture<>();
 
         // The extension should detect this and configure the deserializer!
-        @Incoming("test-topic")
+        // Channel name "test-consumer" contains "consumer" so direction heuristic
+        // correctly identifies this as incoming.
+        @Incoming("test-consumer")
         public void consume(ValidationWarning msg) {
             received.complete(msg);
         }
