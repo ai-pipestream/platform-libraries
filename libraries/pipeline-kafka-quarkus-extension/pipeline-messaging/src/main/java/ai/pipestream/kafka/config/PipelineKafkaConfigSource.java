@@ -27,6 +27,7 @@ import java.util.*;
  * </p>
  */
 public class PipelineKafkaConfigSource implements ConfigSource {
+    private static final String PIPELINE_TOPIC_PREFIX = "PIPELINE_TOPIC_";
     private final Map<String, String> config = new HashMap<>();
 
     public PipelineKafkaConfigSource() {
@@ -80,8 +81,8 @@ public class PipelineKafkaConfigSource implements ConfigSource {
         System.getProperties().forEach((k, v) -> allProps.put(k.toString(), v.toString()));
 
         allProps.forEach((key, value) -> {
-            if (key.startsWith("PIPELINE_TOPIC_")) {
-                String channel = key.substring(15).toLowerCase().replace("_", "-");
+            if (key.startsWith(PIPELINE_TOPIC_PREFIX)) {
+                String channel = key.substring(PIPELINE_TOPIC_PREFIX.length()).toLowerCase().replace("_", "-");
                 String direction;
 
                 // Explicit direction in env var (e.g. PIPELINE_TOPIC_IN_MY_CHANNEL)
