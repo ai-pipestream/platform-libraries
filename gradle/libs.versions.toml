@@ -12,7 +12,7 @@ grpc = "1.77.0"
 protobuf = "4.33.1"
 
 # Quarkiverse extensions
-quinoa = "2.6.2"
+quinoa = "2.7.0"
 wiremock = "1.5.2"
 wiremock-standalone = "3.13.2"
 wiremock-grpc-extension = "0.11.0"
