@@ -1,113 +1,224 @@
 # Kafka Configuration Guide
 
 ## Overview
-The Pipeline Platform uses a centralized configuration strategy for Kafka to ensure consistency, reliability, and ease of use. This configuration is provided by the `ai.pipestream.common.config.PipelineKafkaConfigSource` class in `pipeline-commons`.
+The Pipeline Platform provides **zero-config Kafka** through the `pipeline-kafka-quarkus-extension`. This extension automatically handles all Kafka configuration, topic mapping, and Protobuf serialization.
 
-## How It Works
-Instead of repeating 10-15 lines of configuration for every Kafka channel in every service, the platform injects global defaults at the **Connector** level (`mp.messaging.connector.smallrye-kafka`).
+## What the Extension Does Automatically
 
-This means any channel using `connector=smallrye-kafka` automatically inherits:
-*   **Serialization:** UUID keys, Protobuf values.
-*   **Registry:** Apicurio Registry integration with `TopicIdStrategy`.
-*   **Reliability:** `acks=all`, `idempotence=true` (Producers), `auto.offset.reset=earliest` (Consumers).
-*   **Performance:** optimized batching and compression (`snappy`, `linger.ms=20`).
+The extension (`ai.pipestream:pipeline-kafka-quarkus-extension`) provides:
 
-## Usage
+*   **Automatic Topic Mapping:** Channel names automatically map to Kafka topics
+*   **Connector Auto-Setup:** Automatically configures `smallrye-kafka` connectors
+*   **Protobuf Serialization/Deserialization:** Automatically configures serializers, deserializers, and return-classes
+*   **Platform Standards:** Enforces UUID keys, Protobuf values, reliability settings
+*   **Schema Registration:** Auto-registers Protobuf schemas with Apicurio
+
+**What You Still Configure:**
+*   `kafka.bootstrap.servers` (infrastructure URL)
+*   `mp.messaging.connector.smallrye-kafka.apicurio.registry.url` (infrastructure URL)
+*   Optional custom topic mappings (if needed)
+
+**The extension handles all the complex Kafka configuration - you only provide the infrastructure URLs.**
+
+## Legacy Configuration (Still Works)
+
+The original `PipelineKafkaConfigSource` in `pipeline-commons` still provides global defaults, but the extension makes manual configuration unnecessary.
+
+## Usage (New Extension Approach - RECOMMENDED)
 
 ### 1. Dependencies
-Ensure your service depends on `pipeline-commons`:
+Add the Kafka extension to your `build.gradle`:
+
 ```groovy
-implementation platform('ai.pipestream:pipeline-bom:0.2.10') // or later
-implementation 'ai.pipestream:pipeline-commons'
+dependencies {
+    implementation platform('ai.pipestream:pipeline-bom:0.2.10') // or later
+    implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'  // This handles everything!
+    implementation 'ai.pipestream:grpc-stubs'  // Your protobuf types
+}
 ```
 
-### 2. Configuring a Channel (Producer)
-In your `application.properties`, you only need to define the connector and topic. The extension handles the rest!
+### 2. Infrastructure Configuration (Still Required)
+
+You MUST configure the infrastructure URLs in all environments:
 
 ```properties
-# 1. Define the connector (Triggers the global defaults)
-mp.messaging.outgoing.my-channel.connector=smallrye-kafka
-
-# 2. Define the topic
-mp.messaging.outgoing.my-channel.topic=my-topic-name
+# REQUIRED: Infrastructure settings
+kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
+mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
 ```
 
-**That's it!** The extension automatically applies:
-*   `UUIDSerializer` for keys
-*   `ProtobufKafkaSerializer` for values
-*   `auto-register=true` for schemas
-*   `proto.message-name` (inferred from your `Emitter<T>` type!)
+### 3. Application Code (Zero Kafka Config Needed!)
 
-### 3. Configuring a Channel (Consumer)
-Consumers are just as easy. The extension infers the return class from your `@Incoming` method signature.
+Just use channel names in your code. The extension handles all Kafka-related configuration automatically.
 
-```properties
-# 1. Connector
-mp.messaging.incoming.my-channel.connector=smallrye-kafka
+**Producer:**
+```java
+import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.MutinyEmitter;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 
-# 2. Topic
-mp.messaging.incoming.my-channel.topic=my-topic-name
+@ApplicationScoped
+public class ValidationPublisher {
+    @Channel("validation-events-producer")  // Automatically maps to topic "validation-events"
+    MutinyEmitter<ValidationEvent> emitter;
+
+    public Uni<Void> publishValidation(ValidationEvent event) {
+        return emitter.send(event);  // UUID key + Protobuf serialization = automatic
+    }
+}
 ```
 
-**That's it!** The extension automatically applies:
-*   `UUIDDeserializer` for keys
-*   `ProtobufKafkaDeserializer` for values
-*   `return-class` (inferred from `consume(ConsumerRecord<UUID, MyProtoType> record)`)
+**Consumer:**
+```java
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import java.util.UUID;
 
-### 4. Zero-Config via Environment Variables
-You can even skip `application.properties` entirely! Use environment variables to configure topics dynamically.
-
-*   **Format:** `PIPELINE_TOPIC_{TOPIC_NAME}={topic-name}`
-*   **Direction:** The extension guesses if it's incoming or outgoing based on the channel name (e.g., contains "in", "consumer", "out", "producer").
-
-**Example:**
-`PIPELINE_TOPIC_USER_EVENTS=user-events-v1`
-
-If you have a channel named `user-events` in your code, the extension will automatically configure it to use the `user-events-v1` topic.
-
-## Overriding Defaults
-If a specific channel needs different settings (e.g., JSON serialization instead of Protobuf), you can override the defaults in `application.properties`:
-
-```properties
-mp.messaging.outgoing.legacy-channel.connector=smallrye-kafka
-mp.messaging.outgoing.legacy-channel.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+@ApplicationScoped
+public class ValidationConsumer {
+    @Incoming("validation-events-consumer")  // Automatically maps to topic "validation-events"
+    public Uni<Void> consume(ConsumerRecord<UUID, ValidationEvent> record) {
+        // Automatic UUID key deserialization + Protobuf value deserialization
+        return processValidation(record.value());
+    }
+}
 ```
 
-## Debugging
-If configuration seems missing:
-1.  Check that `pipeline-commons` is in your classpath.
-2.  Verify that `PipelineKafkaConfigSource` is registered in `META-INF/services/org.eclipse.microprofile.config.spi.ConfigSource`.
-3.  Run `./gradlew dependencies` to ensure you aren't pulling an old version of `pipeline-commons`.
+### 3. Automatic Topic Mapping
 
-## Testing Configuration
+The extension automatically maps channel names to topics using directional suffixes. **Never use the same channel name for both @Channel and @Incoming simultaneously - this causes SmallRye conflicts. Single-direction usage works fine:**
 
-For integration tests, we **DO NOT** rely on the default Quarkus Kafka DevServices (which spins up a random container). Instead, we use a deterministic approach with Docker Compose and programmatic configuration.
+- ✅ `@Channel("validation-events-producer")` → topic `"validation-events"`
+- ✅ `@Incoming("validation-events-consumer")` → topic `"validation-events"`
+- ❌ `@Channel("events")` + `@Incoming("events")` → **CONFLICTS!**
 
-### 1. Infrastructure (`compose-test-services.yml`)
-Define your test infrastructure (Redpanda, Apicurio, etc.) in a `src/test/resources/compose-test-services.yml` file.
+### 4. Optional: Custom Topic Names
 
-### 2. Configuration (`application.properties`)
-Use the `%test` profile to configure the test environment. The extension works seamlessly with `quarkus-compose-devservices`.
+If you need a channel to use a different topic name:
 
 ```properties
-# Enable Compose Dev Services
+mp.messaging.outgoing.my-channel.topic=custom-topic-name
+mp.messaging.incoming.my-channel.topic=custom-topic-name
+```
+
+**That's it!** No serializers, deserializers, registry URLs, or connector settings needed.
+
+## Testing with the Extension
+
+The extension makes testing much simpler - all the complex Kafka configuration is handled automatically.
+
+### 1. Test Infrastructure
+**`src/test/resources/compose-test-services.yml`** (standard infrastructure)
+```yaml
+version: '3.8'
+services:
+  kafka-test:
+    image: redpandadata/redpanda:latest
+    # ... standard kafka config ...
+  apicurio-registry-test:
+    image: apicurio/apicurio-registry:3.0.12
+    # ... standard apicurio config ...
+```
+
+### 2. Test Configuration
+**`src/test/resources/application.properties`**
+```properties
+# Enable test infrastructure
 %test.quarkus.compose.devservices.enabled=true
 %test.quarkus.compose.devservices.files=src/test/resources/compose-test-services.yml
 
-# Configure Apicurio URL (exposed by Compose)
+# Infrastructure URLs (provided by compose-devservices)
+%test.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS:localhost:9095}
 %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3}
 
-# Kafka Bootstrap Servers (exposed by Compose)
-%test.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS:localhost:9095}
+# The extension handles ALL OTHER Kafka configuration automatically!
+# No manual serializers, deserializers, connector settings, etc. needed!
 ```
 
-No manual `KafkaTestResource` is required for standard setups!
+### 3. Writing Tests
 
-### 3. Usage in Test
-Annotate your test class:
-
+**Producer Test:**
 ```java
 @QuarkusTest
-@QuarkusTestResource(KafkaTestResource.class)
-public class MyConsumerTest { ... }
+public class MyPublisherTest {
+    @Inject
+    MyPublisher publisher;  // Your service with @Channel injection
+
+    @Test
+    public void testEventIsPublished() {
+        // The extension handles all Kafka setup automatically
+        publisher.publishEvent(new MyEvent());
+        // Verify via downstream effects or integration assertions
+    }
+}
 ```
+
+**Consumer Test:**
+```java
+@QuarkusTest
+public class MyConsumerTest {
+    @InjectMock
+    DownstreamService mockService;
+
+    @Test
+    public void testConsumer() {
+        // The extension automatically configures the consumer
+        // Send test messages and verify mockService was called
+    }
+}
+```
+
+## Migration from Manual Configuration
+
+### What Changes
+
+**Before (Manual Configuration):**
+```groovy
+dependencies {
+    implementation 'ai.pipestream:pipeline-commons'  // Only this
+}
+```
+
+```properties
+# Lots of manual configuration needed
+kafka.bootstrap.servers=...
+mp.messaging.connector.smallrye-kafka.apicurio.registry.url=...
+mp.messaging.outgoing.events.connector=smallrye-kafka
+mp.messaging.outgoing.events.topic=events
+mp.messaging.incoming.events.connector=smallrye-kafka
+mp.messaging.incoming.events.topic=events
+# Plus global configs for serializers, registry settings, etc.
+```
+
+**After (Extension):**
+```groovy
+dependencies {
+    implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'  // Just this
+}
+```
+
+```properties
+# Only infrastructure URLs needed - extension handles everything else!
+kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
+mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+```
+
+### Migration Steps
+
+1. **Add the extension dependency** to your `build.gradle`
+2. **Remove all manual Kafka configuration** from `application.properties`
+3. **Update channel names** if needed (use directional suffixes for producer/consumer pairs)
+4. **Remove test configuration** for serializers/deserializers (extension handles it)
+
+### What the Extension Does
+
+- ✅ **Automatic topic mapping** from channel names
+- ✅ **Automatic connector setup** for all detected channels
+- ✅ **Automatic Protobuf deserialization** with correct return types
+- ✅ **Platform standard enforcement** (UUID keys, reliability settings)
+- ✅ **Simplified testing** with automatic configuration
+
+**Developers are NOT allowed to configure Kafka manually anymore. The extension handles everything.**
