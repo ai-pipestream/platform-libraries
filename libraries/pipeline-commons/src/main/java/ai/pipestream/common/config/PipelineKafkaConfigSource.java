@@ -82,6 +82,15 @@ public class PipelineKafkaConfigSource implements ConfigSource {
         if (registryUrl != null && !registryUrl.isBlank()) {
             CONFIG.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.url", registryUrl);
         }
+
+        // Log all properties that are being set at startup for visibility
+        // This helps diagnose effective defaults applied to the SmallRye Kafka connector
+        if (LOG.isInfoEnabled()) {
+            LOG.info("PipelineKafkaConfigSource initializing default Kafka properties");
+            for (Map.Entry<String, String> entry : CONFIG.entrySet()) {
+                LOG.infof("  %s = %s", entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @Override

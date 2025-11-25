@@ -10,7 +10,7 @@ import java.util.Map;
  * This resource enforces standard ports for Docker Compose services:
  * - Kafka: localhost:9095
  * - Apicurio: localhost:8082
- *
+ * <p>
  * Usage:
  * 
  * @QuarkusTest

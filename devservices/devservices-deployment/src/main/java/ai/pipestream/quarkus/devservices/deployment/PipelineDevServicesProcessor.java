@@ -34,6 +34,10 @@ class PipelineDevServicesProcessor {
     private static final boolean DEFAULT_START_SERVICES = true;
     private static final boolean DEFAULT_STOP_SERVICES = false;
     private static final boolean DEFAULT_REUSE_PROJECT_FOR_TESTS = true;
+    private static final String KAKFA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
+    private static final String KAKFA_BOOTSTRAP_SERVERS_VALUE = "localhost:9094";
+    private static final String KAFKA_APICURIO_REGISTRY_URL = "mp.messaging.connector.smallrye-kafka.apicurio.registry.url";
+    private static final String KAFKA_APICURIO_REGISTRY_URL_VALUE = "http://localhost:8081/apis/registry/v3";
 
     @BuildStep(onlyIf = IsDevelopment.class)
     FeatureBuildItem feature() {
@@ -180,10 +184,13 @@ class PipelineDevServicesProcessor {
 
             // Add DevServices configuration for shared network
             // This enables Kafka DevServices to use internal container hostnames instead of port mapping
-            composeConfig.put("kafka.bootstrap.servers", "localhost:9094");
-            composeConfig.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.url",
-                    "http://localhost:8081/apis/registry/v3");
-
+            LOG.info("****  Enabling shared network for Kafka DevServices  ****");
+            composeConfig.put(KAKFA_BOOTSTRAP_SERVERS, KAKFA_BOOTSTRAP_SERVERS_VALUE);
+            LOG.infof("Set the %s to %s for client connections", KAKFA_BOOTSTRAP_SERVERS, KAKFA_BOOTSTRAP_SERVERS_VALUE);
+            System.setProperty("quarkus.kafka.bootstrap.servers", KAKFA_BOOTSTRAP_SERVERS_VALUE);
+            composeConfig.put(KAFKA_APICURIO_REGISTRY_URL, KAFKA_APICURIO_REGISTRY_URL_VALUE);
+            LOG.infof("Set the %s to %s for Apicurio Registry.", KAFKA_APICURIO_REGISTRY_URL, KAFKA_APICURIO_REGISTRY_URL_VALUE);
+            System.setProperty("mp.messaging.connector.smallrye-kafka.apicurio.registry.url", KAFKA_APICURIO_REGISTRY_URL_VALUE);
 
 
             applyPipelineSystemProperties(composeConfig);
