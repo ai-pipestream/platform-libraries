@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 public class ErrorConsumer {
     private final CompletableFuture<ValidationError> received = new CompletableFuture<>();
 
-    @Incoming("error-consumer")
+    @Incoming("validation-errors-consumer")
     public void consume(ValidationError msg) {
         received.complete(msg);
     }

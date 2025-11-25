@@ -6,14 +6,11 @@ import ai.pipestream.validation.v1.ValidationWarning;
 import ai.pipestream.validation.v1.ValidationWarningType;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.reactive.messaging.MutinyEmitter;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
@@ -29,30 +26,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * 3. Messages are correctly serialized and deserialized end-to-end
  * <p>
  * This serves as a reference implementation for using the extension.
+ * <p>
+ * Note: The consumer classes (WarningConsumer, ErrorConsumer) are in src/main/java
+ * so that the extension's AutoSchemaProcessor can detect them at build time and
+ * auto-configure the Apicurio deserializer with the correct protobuf return class.
  */
 @QuarkusTest
 public class KafkaProtobufMessagingTest {
 
-    private static final String WARNING_TOPIC = "validation-warnings-v1";
-    private static final String ERROR_TOPIC = "validation-errors-v1";
-
-    // Configure topic mappings via system properties
-    // The extension reads PIPELINE_TOPIC_<CHANNEL_NAME> to map channels to topics
-    static {
-        // Producer channels (no "in" or "consumer" in name -> outgoing)
-        System.setProperty("PIPELINE_TOPIC_WARNING_PRODUCER", WARNING_TOPIC);
-        System.setProperty("PIPELINE_TOPIC_ERROR_PRODUCER", ERROR_TOPIC);
-        // Consumer channels ("consumer" in name -> incoming)
-        System.setProperty("PIPELINE_TOPIC_WARNING_CONSUMER", WARNING_TOPIC);
-        System.setProperty("PIPELINE_TOPIC_ERROR_CONSUMER", ERROR_TOPIC);
-    }
-
     @Inject
-    @Channel("warning-producer")
+    @Channel("validation-warnings-producer")
     MutinyEmitter<ValidationWarning> warningEmitter;
 
     @Inject
-    @Channel("error-producer")
+    @Channel("validation-errors-producer")
     MutinyEmitter<ValidationError> errorEmitter;
 
     @Inject
@@ -111,33 +98,5 @@ public class KafkaProtobufMessagingTest {
         assertEquals("pipeline.config.name", received.getFieldPath());
         assertEquals("Pipeline name is required", received.getMessage());
         assertEquals("REQ-001", received.getErrorCode());
-    }
-
-    @ApplicationScoped
-    public static class WarningConsumer {
-        private final CompletableFuture<ValidationWarning> received = new CompletableFuture<>();
-
-        @Incoming("warning-consumer")
-        public void consume(ValidationWarning msg) {
-            received.complete(msg);
-        }
-
-        public CompletableFuture<ValidationWarning> getReceived() {
-            return received;
-        }
-    }
-
-    @ApplicationScoped
-    public static class ErrorConsumer {
-        private final CompletableFuture<ValidationError> received = new CompletableFuture<>();
-
-        @Incoming("error-consumer")
-        public void consume(ValidationError msg) {
-            received.complete(msg);
-        }
-
-        public CompletableFuture<ValidationError> getReceived() {
-            return received;
-        }
     }
 }

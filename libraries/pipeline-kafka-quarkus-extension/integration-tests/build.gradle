@@ -22,7 +22,9 @@ dependencies {
     testImplementation libs.quarkus.junit5
     testImplementation libs.rest.assured
     testImplementation libs.awaitility
-    testImplementation project(':devservices:devservices')
+
+    // Docker Compose devservices for test infrastructure
+    testImplementation 'io.quarkus:quarkus-devservices'
 }
 
 // This module is for integration testing only - don't publish

@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 public class WarningConsumer {
     private final CompletableFuture<ValidationWarning> received = new CompletableFuture<>();
 
-    @Incoming("warning-consumer")
+    @Incoming("validation-warnings-consumer")
     public void consume(ValidationWarning msg) {
         received.complete(msg);
     }
