@@ -3,8 +3,30 @@ package ai.pipestream.kafka.config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import java.util.*;
 
+/**
+ * Provides default Kafka configuration for the Pipeline application.
+ * <p>
+ * <b>Purpose:</b> This config source supplies sensible defaults for Kafka producer and consumer settings,
+ * including serializer/deserializer classes, performance, and reliability options. It is intended to
+ * enable "zero-config" operation for most pipeline deployments.
+ * </p>
+ * <p>
+ * <b>Configuration Priority:</b> This config source has an ordinal of 300, giving it high priority
+ * over most other config sources except for explicit application or environment overrides.
+ * </p>
+ * <p>
+ * <b>Environment Variable Naming:</b> Topic-specific configuration can be provided via environment variables
+ * following the naming convention <code>PIPELINE_TOPIC_{TOPIC_NAME}</code>, where <code>{TOPIC_NAME}</code>
+ * is the uppercase topic name. For example, <code>PIPELINE_TOPIC_EVENTS</code> configures the "events" topic.
+ * </p>
+ * <p>
+ * <b>Direction Heuristic:</b> The direction (input/output) for a topic is determined heuristically based on
+ * the context or value of the environment variable. For example, if the variable value contains "in" or "out",
+ * or based on the application's topic usage patterns, the config source will infer whether the topic is used
+ * for consumption or production.
+ * </p>
+ */
 public class PipelineKafkaConfigSource implements ConfigSource {
-
     private static final String PIPELINE_TOPIC_PREFIX = "PIPELINE_TOPIC_";
     private final Map<String, String> config = new HashMap<>();
 
