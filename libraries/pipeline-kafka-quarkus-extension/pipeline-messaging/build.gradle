@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.java.library)
-    alias(libs.plugins.quarkus)
+    alias(libs.plugins.quarkus.extension)
+}
+
+quarkusExtension {
+    deploymentModule = 'pipeline-messaging-deployment'
 }
 
 dependencies {
@@ -17,10 +21,19 @@ dependencies {
     // Kafka Admin Client for dynamic topic creation
     api 'org.apache.kafka:kafka-clients'
 
+    // Annotation processor for extension metadata
+    annotationProcessor 'io.quarkus:quarkus-extension-processor'
+
     // Testing
     testImplementation libs.quarkus.junit5
     testImplementation libs.rest.assured
     testImplementation libs.awaitility
     testImplementation project(':grpc:grpc-stubs')
     testImplementation project(':devservices:devservices')
+}
+
+// Workaround for Gradle 9: disable validateExtension which performs unsafe configuration resolution
+// The extensionDescriptor task will still run without validation
+tasks.matching { it.name == 'validateExtension' }.configureEach {
+    enabled = false
 }

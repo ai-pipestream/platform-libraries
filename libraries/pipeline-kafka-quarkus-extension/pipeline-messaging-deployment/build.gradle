@@ -5,7 +5,10 @@ plugins {
 dependencies {
     implementation platform(libs.quarkus.bom)
     implementation project(':libraries:pipeline-kafka-quarkus-extension:pipeline-messaging')
-    
+
     implementation 'io.quarkus:quarkus-core-deployment'
     implementation 'io.quarkus:quarkus-messaging-kafka-deployment'
+
+    // Annotation processor for extension metadata
+    annotationProcessor 'io.quarkus:quarkus-extension-processor'
 }
