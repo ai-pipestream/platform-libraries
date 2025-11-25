@@ -34,10 +34,6 @@ class PipelineDevServicesProcessor {
     private static final boolean DEFAULT_START_SERVICES = true;
     private static final boolean DEFAULT_STOP_SERVICES = false;
     private static final boolean DEFAULT_REUSE_PROJECT_FOR_TESTS = true;
-    private static final String KAKFA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
-    private static final String KAKFA_BOOTSTRAP_SERVERS_VALUE = "localhost:9094";
-    private static final String KAFKA_APICURIO_REGISTRY_URL = "mp.messaging.connector.smallrye-kafka.apicurio.registry.url";
-    private static final String KAFKA_APICURIO_REGISTRY_URL_VALUE = "http://localhost:8081/apis/registry/v3";
 
     @BuildStep(onlyIf = IsDevelopment.class)
     FeatureBuildItem feature() {
@@ -84,7 +80,7 @@ class PipelineDevServicesProcessor {
             // Read compose file from classpath (from runtime module resources)
             InputStream composeResource = Thread.currentThread().getContextClassLoader()
                     .getResourceAsStream(COMPOSE_FILE_RESOURCE);
-            
+
             if (composeResource == null) {
                 LOG.warn("Compose file not found in classpath: " + COMPOSE_FILE_RESOURCE);
                 clearPipelineSystemProperties();
@@ -104,7 +100,7 @@ class PipelineDevServicesProcessor {
             if (Files.exists(composeFile)) {
                 // Read existing version info
                 VersionInfo existingVersion = readVersionInfo(versionFile);
-                
+
                 if (existingVersion != null && existingVersion.sha().equals(resourceSha)) {
                     // Same version, no update needed
                     LOG.debug("Compose file is up to date");
@@ -117,7 +113,7 @@ class PipelineDevServicesProcessor {
                         // Check if file was edited (SHA differs from stored SHA)
                         byte[] existingBytes = Files.readAllBytes(composeFile);
                         String existingSha = calculateSHA(existingBytes);
-                        
+
                         if (existingVersion.sha().equals(existingSha)) {
                             // File wasn't edited, safe to auto-update
                             LOG.info("Auto-updating compose file (version changed)");
@@ -162,7 +158,7 @@ class PipelineDevServicesProcessor {
             String projectName = config.projectName()
                     .filter(s -> !s.isEmpty())
                     .orElse("pipeline-shared-devservices");
-            
+
             // Set the compose file path
             LOG.info("Pipeline Dev Services configured: " + composeFileAbsolutePath);
             LOG.info("To enable Compose Dev Services, add the following properties to your application.properties:");
@@ -183,15 +179,9 @@ class PipelineDevServicesProcessor {
                     Boolean.toString(DEFAULT_REUSE_PROJECT_FOR_TESTS));
 
             // Add DevServices configuration for shared network
-            // This enables Kafka DevServices to use internal container hostnames instead of port mapping
-            LOG.info("****  Enabling shared network for Kafka DevServices  ****");
-            composeConfig.put(KAKFA_BOOTSTRAP_SERVERS, KAKFA_BOOTSTRAP_SERVERS_VALUE);
-            LOG.infof("Set the %s to %s for client connections", KAKFA_BOOTSTRAP_SERVERS, KAKFA_BOOTSTRAP_SERVERS_VALUE);
-            System.setProperty("quarkus.kafka.bootstrap.servers", KAKFA_BOOTSTRAP_SERVERS_VALUE);
-            composeConfig.put(KAFKA_APICURIO_REGISTRY_URL, KAFKA_APICURIO_REGISTRY_URL_VALUE);
-            LOG.infof("Set the %s to %s for Apicurio Registry.", KAFKA_APICURIO_REGISTRY_URL, KAFKA_APICURIO_REGISTRY_URL_VALUE);
-            System.setProperty("mp.messaging.connector.smallrye-kafka.apicurio.registry.url", KAFKA_APICURIO_REGISTRY_URL_VALUE);
-
+            // This enables Kafka DevServices to use internal container hostnames instead of
+            // port mapping
+            // Kafka configuration is now handled by pipeline-kafka-quarkus-extension
 
             applyPipelineSystemProperties(composeConfig);
             updateComposeConfigBuilder(composeFileAbsolutePath, projectName);
@@ -207,7 +197,7 @@ class PipelineDevServicesProcessor {
         }
     }
 
-    private void extractComposeFile(Path composeFile, Path versionFile, byte[] resourceBytes, String resourceSha) 
+    private void extractComposeFile(Path composeFile, Path versionFile, byte[] resourceBytes, String resourceSha)
             throws IOException {
         Files.write(composeFile, resourceBytes);
         writeVersionInfo(versionFile, resourceSha);
@@ -215,13 +205,13 @@ class PipelineDevServicesProcessor {
     }
 
     private void updateComposeFile(Path composeFile, Path versionFile, byte[] resourceBytes, String resourceSha,
-                                   PipelineDevServicesConfig config) throws IOException {
+            PipelineDevServicesConfig config) throws IOException {
         // Check if file was edited
         VersionInfo existingVersion = readVersionInfo(versionFile);
         if (existingVersion != null && Files.exists(composeFile)) {
             byte[] existingBytes = Files.readAllBytes(composeFile);
             String existingSha = calculateSHA(existingBytes);
-            
+
             if (!existingVersion.sha().equals(existingSha)) {
                 // File was edited, create backup
                 String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
@@ -230,7 +220,7 @@ class PipelineDevServicesProcessor {
                 LOG.info("Created backup of edited compose file: " + backupFile);
             }
         }
-        
+
         // Update the file
         Files.write(composeFile, resourceBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         writeVersionInfo(versionFile, resourceSha);
@@ -243,13 +233,13 @@ class PipelineDevServicesProcessor {
             if (!Files.exists(composeFile) || Files.size(composeFile) == 0) {
                 throw new RuntimeException("Compose file is empty or doesn't exist");
             }
-            
+
             // Basic YAML validation - check for key markers
             String content = Files.readString(composeFile);
             if (!content.contains("services:") && !content.contains("version:") && !content.contains("name:")) {
                 LOG.warn("Compose file may not be valid YAML - missing expected markers");
             }
-            
+
             LOG.debug("YAML validation passed");
         } catch (IOException e) {
             throw new RuntimeException("Failed to validate compose file", e);
@@ -284,7 +274,7 @@ class PipelineDevServicesProcessor {
             if (!Files.exists(versionFile)) {
                 return null;
             }
-            
+
             String content = Files.readString(versionFile);
             String sha = null;
             for (String line : content.split("\n")) {
@@ -293,7 +283,7 @@ class PipelineDevServicesProcessor {
                     break;
                 }
             }
-            
+
             return sha != null ? new VersionInfo(sha) : null;
         } catch (IOException e) {
             LOG.warn("Failed to read version info", e);

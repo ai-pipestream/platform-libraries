@@ -9,13 +9,13 @@ dependencies {
     
     // Core Quarkus & Kafka dependencies
     implementation libs.quarkus.arc
-    implementation 'io.quarkus:quarkus-messaging-kafka'
+    api 'io.quarkus:quarkus-messaging-kafka'
     
     // Apicurio v3 (Direct dependency, NOT the Quarkus extension)
-    implementation libs.apicurio.registry.protobuf.serde
+    api libs.apicurio.registry.protobuf.serde
     
     // Kafka Admin Client for dynamic topic creation
-    implementation 'org.apache.kafka:kafka-clients'
+    api 'org.apache.kafka:kafka-clients'
 
     // Testing
     testImplementation libs.quarkus.junit5

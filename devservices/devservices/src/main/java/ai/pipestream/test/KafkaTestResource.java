@@ -21,17 +21,9 @@ public class KafkaTestResource implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        Map<String, String> config = new HashMap<>();
-
-        // 1. Disable default DevServices to prevent conflicts with Docker Compose
-        config.put("quarkus.kafka.devservices.enabled", "false");
-
-        // 2. Point to standard Compose service ports
-        config.put("kafka.bootstrap.servers", "localhost:9095");
-        config.put("mp.messaging.connector.smallrye-kafka.apicurio.registry.url",
-                "http://localhost:8082/apis/registry/v3");
-
-        return config;
+        // Kafka configuration is now handled by pipeline-kafka-quarkus-extension
+        // and docker-compose.yml
+        return new HashMap<>();
     }
 
     @Override

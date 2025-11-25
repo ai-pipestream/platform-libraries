@@ -13,16 +13,37 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class TopicProvisioner {
 
-    @Inject Config config;
+    @Inject
+    Config config;
 
     void onStart(@Observes StartupEvent ev) {
-        // Only run if bootstrap servers are configured
-        Optional<String> bootstrap = config.getOptionalValue("kafka.bootstrap.servers", String.class);
-        if (bootstrap.isEmpty()) {
-            return;
+        // 1. Build Admin Client Configuration
+        Map<String, Object> adminConfig = new HashMap<>();
+
+        // Collect all 'kafka.' properties (e.g. kafka.bootstrap.servers ->
+        // bootstrap.servers)
+        for (String prop : config.getPropertyNames()) {
+            if (prop.startsWith("kafka.")) {
+                adminConfig.put(prop.substring(6), config.getValue(prop, String.class));
+            }
         }
 
-        // 1. Identify all topics we intend to use
+        // Collect all 'mp.messaging.connector.smallrye-kafka.' properties (overrides
+        // kafka.*)
+        // This is where PipelineKafkaConfigSource puts its defaults
+        String smallryePrefix = "mp.messaging.connector.smallrye-kafka.";
+        for (String prop : config.getPropertyNames()) {
+            if (prop.startsWith(smallryePrefix)) {
+                adminConfig.put(prop.substring(smallryePrefix.length()), config.getValue(prop, String.class));
+            }
+        }
+
+        // Check if we have bootstrap servers
+        if (!adminConfig.containsKey("bootstrap.servers")) {
+            return; // No Kafka configured
+        }
+
+        // 2. Identify all topics we intend to use
         Set<String> topicsToCreate = new HashSet<>();
         for (String prop : config.getPropertyNames()) {
             if (prop.contains(".topic") && prop.startsWith("mp.messaging")) {
@@ -34,19 +55,26 @@ public class TopicProvisioner {
             return;
         }
 
-        // 2. Check Kafka
-        try (AdminClient client = AdminClient.create(Map.of("bootstrap.servers", bootstrap.get()))) {
+        // 3. Check Kafka and Create Topics
+        try (AdminClient client = AdminClient.create(adminConfig)) {
             Set<String> existing = client.listTopics().names().get();
             topicsToCreate.removeAll(existing);
 
             if (!topicsToCreate.isEmpty()) {
                 int partitions = config.getOptionalValue("pipeline.kafka.default-partitions", Integer.class).orElse(3);
-                short replication = config.getOptionalValue("pipeline.kafka.default-replication-factor", Short.class).orElse((short) 1);
+                short replication = config.getOptionalValue("pipeline.kafka.default-replication-factor", Short.class)
+                        .orElse((short) 1);
 
                 List<NewTopic> newTopics = topicsToCreate.stream()
-                    .map(name -> new NewTopic(name, partitions, replication))
-                    .collect(Collectors.toList());
-                
+                        .map(name -> {
+                            NewTopic topic = new NewTopic(name, partitions, replication);
+                            Map<String, String> topicConfigs = new HashMap<>();
+                            topicConfigs.put("max.message.bytes", "8388608"); // 8MB
+                            topic.configs(topicConfigs);
+                            return topic;
+                        })
+                        .collect(Collectors.toList());
+
                 client.createTopics(newTopics).all().get();
                 System.out.println("Pipeline: Auto-provisioned topics: " + topicsToCreate);
             }
