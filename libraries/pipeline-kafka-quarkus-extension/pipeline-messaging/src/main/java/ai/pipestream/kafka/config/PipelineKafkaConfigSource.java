@@ -60,8 +60,20 @@ public class PipelineKafkaConfigSource implements ConfigSource {
         allProps.forEach((key, value) -> {
             if (key.startsWith("PIPELINE_TOPIC_")) {
                 String channel = key.substring(15).toLowerCase().replace("_", "-");
-                // Heuristic: If channel has 'in' or 'consumer', it's incoming.
-                String direction = (channel.contains("in") || channel.contains("consumer")) ? "incoming" : "outgoing";
+                String direction;
+
+                // Explicit direction in env var (e.g. PIPELINE_TOPIC_IN_MY_CHANNEL)
+                if (key.contains("_IN_")) {
+                    direction = "incoming";
+                    // Remove 'in-' prefix from channel name if present due to replace above
+                    channel = channel.replace("in-", "");
+                } else if (key.contains("_OUT_")) {
+                    direction = "outgoing";
+                    channel = channel.replace("out-", "");
+                } else {
+                    // Fallback Heuristic: If channel has 'in' or 'consumer', it's incoming.
+                    direction = (channel.contains("in") || channel.contains("consumer")) ? "incoming" : "outgoing";
+                }
 
                 config.put("mp.messaging." + direction + "." + channel + ".topic", value);
                 config.put("mp.messaging." + direction + "." + channel + ".connector", "smallrye-kafka");
