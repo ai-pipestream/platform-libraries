@@ -1,0 +1,26 @@
+plugins {
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus)
+}
+
+dependencies {
+    implementation platform(libs.quarkus.bom)
+    implementation project(':libraries:pipeline-commons') // For Keys/UUIDs
+    
+    // Core Quarkus & Kafka dependencies
+    implementation libs.quarkus.arc
+    api 'io.quarkus:quarkus-messaging-kafka'
+    
+    // Apicurio v3 (Direct dependency, NOT the Quarkus extension)
+    api libs.apicurio.registry.protobuf.serde
+    
+    // Kafka Admin Client for dynamic topic creation
+    api 'org.apache.kafka:kafka-clients'
+
+    // Testing
+    testImplementation libs.quarkus.junit5
+    testImplementation libs.rest.assured
+    testImplementation libs.awaitility
+    testImplementation project(':grpc:grpc-stubs')
+    testImplementation project(':devservices:devservices')
+}

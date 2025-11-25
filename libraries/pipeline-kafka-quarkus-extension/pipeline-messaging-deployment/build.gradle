@@ -1,0 +1,11 @@
+plugins {
+    alias(libs.plugins.java.library)
+}
+
+dependencies {
+    implementation platform(libs.quarkus.bom)
+    implementation project(':libraries:pipeline-kafka-quarkus-extension:pipeline-messaging')
+    
+    implementation 'io.quarkus:quarkus-core-deployment'
+    implementation 'io.quarkus:quarkus-messaging-kafka-deployment'
+}
