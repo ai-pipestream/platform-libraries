@@ -88,6 +88,8 @@ public class ProtobufKafkaProcessor {
      */
     @BuildStep
     FeatureBuildItem feature() {
+        LOG.info("🔌 [Extension] Pipeline Protobuf Kafka Connector extension is loading...");
+        LOG.info("🔌 [Extension] Registering feature: pipeline-kafka-magic");
         return new FeatureBuildItem("pipeline-kafka-magic");
     }
 
