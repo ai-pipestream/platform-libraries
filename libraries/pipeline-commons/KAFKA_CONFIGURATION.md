@@ -20,7 +20,51 @@ The extension (`ai.pipestream:pipeline-kafka-quarkus-extension`) provides:
 
 **The extension handles all the complex Kafka configuration - you only provide the infrastructure URLs.**
 
-## Legacy Configuration (Still Works)
+## Quick Start (What Developers Actually Need to Do)
+
+**To add Kafka to your service:**
+
+1. **Add this to `build.gradle`:**
+   ```groovy
+   implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'
+   ```
+
+2. **Add this to `application.properties`:**
+   ```properties
+   kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
+   mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+   ```
+
+3. **Use these in your code:**
+   ```java
+   @Channel("events-producer") MutinyEmitter<MyEvent> emitter;
+   @Incoming("events-consumer") ConsumerRecord<UUID, MyEvent> consume(record);
+   ```
+
+**DONE!** No other Kafka configuration needed. The extension does everything else automatically.
+
+## Troubleshooting Common Issues
+
+### Messages not being sent/received
+- **Infrastructure URLs set?** Check `kafka.bootstrap.servers` and `apicurio.registry.url`
+- **Channel name conflicts?** Don't use same name for `@Channel` and `@Incoming`
+- **Extension dependency?** Verify `pipeline-kafka-quarkus-extension` is in `build.gradle`
+
+### Serialization errors
+- **Protobuf classes?** Extension only works with Protobuf messages from `grpc-stubs`
+- **Consumer signature?** Must use `ConsumerRecord<UUID, YourProtobufType>`
+
+### Build errors
+- **Channel names?** Use directional suffixes like `-producer`, `-consumer`
+- **Dependencies?** Need `pipeline-commons`, `grpc-stubs`, and the extension
+
+### Need custom topic names
+```properties
+mp.messaging.outgoing.my-channel.topic=custom-topic-name
+mp.messaging.incoming.my-channel.topic=custom-topic-name
+```
+
+## Legacy Configuration (DEPRECATED)
 
 The original `PipelineKafkaConfigSource` in `pipeline-commons` still provides global defaults, but the extension makes manual configuration unnecessary.
 
@@ -222,3 +266,46 @@ mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_
 - ✅ **Simplified testing** with automatic configuration
 
 **Developers are NOT allowed to configure Kafka manually anymore. The extension handles everything.**
+
+## What NOT to Do (Important!)
+
+❌ **DO NOT** add these to `application.properties`:
+- `mp.messaging.outgoing.*.connector=smallrye-kafka`
+- `mp.messaging.incoming.*.connector=smallrye-kafka`
+- `mp.messaging.*.*.key.serializer=*`
+- `mp.messaging.*.*.value.serializer=*`
+- `mp.messaging.*.*.key.deserializer=*`
+- `mp.messaging.*.*.value.deserializer=*`
+- Any Apicurio registry settings except the URL
+
+❌ **DO NOT** configure serializers/deserializers in code or tests
+
+❌ **DO NOT** use the same channel name for both `@Channel` and `@Incoming`
+
+✅ **ONLY** configure:
+- `kafka.bootstrap.servers`
+- `mp.messaging.connector.smallrye-kafka.apicurio.registry.url`
+- Optional custom topic mappings
+- Your channel names in code
+
+The extension enforces platform standards automatically. Manual configuration will conflict with the extension and cause issues.
+
+## How It All Works Together
+
+**The Extension's Magic:**
+
+1. **Scans your code** during build-time for `@Channel` and `@Incoming` annotations
+2. **Generates configuration** automatically based on your channel names
+3. **Applies platform standards** (UUID keys, Protobuf values, reliability settings)
+4. **Maps channels to topics** using intelligent naming rules
+5. **Configures Apicurio** for schema management and evolution
+
+**Developer Experience:**
+- Add one dependency
+- Set two infrastructure URLs
+- Use channel names in code
+- Get production-ready Kafka messaging
+
+**No more:** Manual serializer config, connector setup, registry configuration, topic mapping, etc.
+
+**All automatic:** Standards compliance, schema evolution, reliable messaging, proper error handling.
