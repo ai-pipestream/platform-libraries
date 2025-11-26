@@ -11,8 +11,7 @@ import java.lang.annotation.Target;
  *
  * <p>This annotation works in conjunction with the Pipeline Protobuf Kafka Connector
  * extension to automatically configure Kafka producers for Protobuf message processing.
- * When applied to a field (typically an {@link org.eclipse.microprofile.reactive.messaging.Emitter}
- * or {@link io.smallrye.mutiny.helpers.test.UniAssertSubscriber.MutinyEmitter}),
+ * When applied to a field (typically an Emitter-like messaging type),
  * it triggers build-time configuration generation that sets up the appropriate serializers
  * and Apicurio Registry integration.</p>
  *
@@ -56,9 +55,7 @@ import java.lang.annotation.Target;
  * Emitter<OrderEvent> orderEmitter;
  * }</pre>
  *
- * @see org.eclipse.microprofile.reactive.messaging.Emitter
  * @see ProtobufIncoming
- * @see ai.pipestream.kafka.connector.deployment.ProtobufKafkaProcessor
  * @since 0.2.10
  */
 @Target({ ElementType.FIELD })
