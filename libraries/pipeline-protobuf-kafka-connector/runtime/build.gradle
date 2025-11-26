@@ -7,6 +7,10 @@ description = 'Pipeline Protobuf Kafka Connector Runtime - Annotations only'
 
 quarkusExtension {
     deploymentModule = 'deployment'
+    parentFirstArtifacts = [
+        'com.google.protobuf:protobuf-java',
+        'ai.pipestream:grpc-stubs'
+    ]
 }
 
 dependencies {

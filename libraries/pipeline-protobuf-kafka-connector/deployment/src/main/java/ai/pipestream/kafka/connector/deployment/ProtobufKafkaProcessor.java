@@ -88,7 +88,6 @@ public class ProtobufKafkaProcessor {
     private void configureIncoming(BuildProducer<SystemPropertyBuildItem> props,
                                    String channel, String typeName, AnnotationInstance annotation) {
         String prefix = "mp.messaging.incoming." + channel;
-        //TODO: add logs for all these additons!!!
 
         // A. Derive topic from channel (strip -in/-out) if not explicit
         AnnotationValue topicVal = annotation.value("topic");
