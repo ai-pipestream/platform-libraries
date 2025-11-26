@@ -6,7 +6,7 @@ plugins {
 description = 'Pipeline Protobuf Kafka Connector Runtime - Annotations only'
 
 quarkusExtension {
-    deploymentModule = 'deployment'
+    deploymentModule = 'pipeline-protobuf-kafka-connector-deployment'
     parentFirstArtifacts = [
         'com.google.protobuf:protobuf-java',
         'ai.pipestream:grpc-stubs'
