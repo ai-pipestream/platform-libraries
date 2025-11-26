@@ -1,47 +1,114 @@
-# Kafka Configuration Guide
+# Kafka Setup Guide
 
-## Overview
-The Pipeline Platform provides **zero-config Kafka** through the `pipeline-kafka-quarkus-extension`. This extension automatically handles all Kafka configuration, topic mapping, and Protobuf serialization.
+## Setup (3 Steps)
 
-## What the Extension Does Automatically
+**Add Kafka messaging to your Quarkus service:**
 
-The extension (`ai.pipestream:pipeline-kafka-quarkus-extension`) provides:
-
-*   **Automatic Topic Mapping:** Channel names automatically map to Kafka topics
-*   **Connector Auto-Setup:** Automatically configures `smallrye-kafka` connectors
-*   **Protobuf Serialization/Deserialization:** Automatically configures serializers, deserializers, and return-classes
-*   **Platform Standards:** Enforces UUID keys, Protobuf values, reliability settings
-*   **Schema Registration:** Auto-registers Protobuf schemas with Apicurio
-
-**What You Still Configure:**
-*   `kafka.bootstrap.servers` (infrastructure URL)
-*   `mp.messaging.connector.smallrye-kafka.apicurio.registry.url` (infrastructure URL)
-*   Optional custom topic mappings (if needed)
-
-**The extension handles all the complex Kafka configuration - you only provide the infrastructure URLs.**
-
-## Quick Start (What Developers Actually Need to Do)
-
-**To add Kafka to your service:**
-
-1. **Add this to `build.gradle`:**
+1. **Add dependency** to `build.gradle`:
    ```groovy
    implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'
    ```
 
-2. **Add this to `application.properties`:**
+2. **Add infrastructure URLs** to `application.properties`:
    ```properties
    kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
    mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
    ```
 
-3. **Use these in your code:**
+3. **Use in your code:**
    ```java
+   // Both emitter types work automatically
    @Channel("events-producer") MutinyEmitter<MyEvent> emitter;
    @Incoming("events-consumer") ConsumerRecord<UUID, MyEvent> consume(record);
    ```
 
-**DONE!** No other Kafka configuration needed. The extension does everything else automatically.
+**That's it!** The extension handles all Kafka configuration automatically.
+
+## What the Extension Does
+
+- ✅ **Automatic topic mapping** from channel names
+- ✅ **Zero-config Protobuf** serialization/deserialization
+- ✅ **Apicurio schema management** and evolution
+- ✅ **Platform standards** (UUID keys, reliability settings)
+- ✅ **Both emitter types** supported (MutinyEmitter & Emitter)
+
+## Production Setup
+
+**Required configuration** for all production environments:
+
+```properties
+# REQUIRED: Infrastructure URLs
+kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
+mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+```
+
+**Optional:** Custom topic mapping if needed:
+```properties
+mp.messaging.outgoing.my-channel.topic=custom-topic-name
+mp.messaging.incoming.my-channel.topic=custom-topic-name
+```
+
+**That's all!** The extension handles everything else automatically.
+
+## Test Environment
+
+**Test setup uses compose-devservices** - no manual configuration needed.
+
+1. **Create test infrastructure** (`src/test/resources/compose-test-services.yml`):
+   ```yaml
+   version: '3.8'
+   services:
+     kafka-test:
+       image: redpandadata/redpanda:latest
+       # Kafka configuration...
+     apicurio-registry-test:
+       image: apicurio/apicurio-registry:3.1.2
+       # Apicurio configuration...
+   ```
+
+2. **Enable automatic test services** (`src/test/resources/application.properties`):
+   ```properties
+   %test.quarkus.compose.devservices.enabled=true
+   %test.quarkus.compose.devservices.files=src/test/resources/compose-test-services.yml
+   ```
+
+**The extension automatically connects to test services - no URLs needed!**
+
+## Development Environment
+
+**Dev uses real Kafka/Apicurio** with database persistence.
+
+1. **Infrastructure URLs** are provided automatically via environment variables or config
+2. **Same configuration as production** - just different URL values
+3. **Database-backed** Apicurio registry persists schemas between restarts
+
+```properties
+# Dev URLs (provided via environment/deployment)
+kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
+mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+```
+
+## Code Examples
+
+### Producer (Both Emitter Types Work)
+```java
+@Channel("user-events-producer")
+MutinyEmitter<UserEvent> mutinyEmitter;
+
+// OR
+
+@Channel("user-events-producer")
+Emitter<UserEvent> emitter;
+```
+
+### Consumer
+```java
+@Incoming("user-events-consumer")
+public Uni<Void> consume(ConsumerRecord<UUID, UserEvent> record) {
+    // Automatic UUID key + Protobuf value deserialization
+    return processEvent(record.value());
+}
+```
 
 ## Troubleshooting Common Issues
 

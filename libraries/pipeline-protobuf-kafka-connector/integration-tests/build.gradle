@@ -14,7 +14,10 @@ dependencies {
 
     // SmallRye Reactive Messaging Kafka (provides MutinyEmitter, @Channel, etc.)
     implementation 'io.quarkus:quarkus-messaging-kafka'
-    
+
+    // Core Reactive Messaging (provides regular Emitter)
+    implementation 'io.quarkus:quarkus-messaging'
+
     // Include the extension runtime (which automatically pulls in deployment module)
     implementation project(':libraries:pipeline-protobuf-kafka-connector:runtime')
     

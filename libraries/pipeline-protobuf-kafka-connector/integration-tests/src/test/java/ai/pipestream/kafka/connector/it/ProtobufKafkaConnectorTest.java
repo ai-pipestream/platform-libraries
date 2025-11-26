@@ -21,8 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @QuarkusTest
 public class ProtobufKafkaConnectorTest {
 
-    // 1. Rename Channel to "-out" to avoid collision
-    // 2. Use properties to force it to write to the SHARED topic
+    // MUTINY EMITTER EXAMPLE (Reactive/Async)
+    // Both MutinyEmitter and regular Emitter are supported.
+    // Choose based on your preference: MutinyEmitter for reactive/async, Emitter for imperative/sync.
+    //
+    // Example with regular Emitter:
+    // @Inject @Channel("test-out") @ProtobufChannel("test-out") Emitter<MyMessage> emitter;
+    // emitter.send(message);
+    //
+    // Example with MutinyEmitter:
+    // @Inject @Channel("test-out") @ProtobufChannel("test-out") MutinyEmitter<MyMessage> emitter;
+    // emitter.sendAndAwait(message);
+    //
     @Inject
     @Channel("test-service-events-out")
     @ProtobufChannel(value = "test-service-events-out", properties = { "topic=test-service-events" })
@@ -39,7 +49,7 @@ public class ProtobufKafkaConnectorTest {
                 .setServiceId("test-id-123")
                 .build();
 
-        // Send
+        // Send using MutinyEmitter (reactive/async pattern)
         emitter.sendAndAwait(message);
 
         // Verify
