@@ -1,0 +1,39 @@
+plugins {
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus.extension)
+}
+
+description = 'Pipeline Protobuf Kafka Connector Runtime - Annotations only'
+
+quarkusExtension {
+    deploymentModule = 'deployment'
+    parentFirstArtifacts = [
+        'com.google.protobuf:protobuf-java',
+        'ai.pipestream:grpc-stubs'
+    ]
+}
+
+dependencies {
+    // Pipeline BOM (includes Quarkus BOM transitively)
+    implementation platform("ai.pipestream:pipeline-bom:${-> rootProject.version}")
+
+    // Quarkus CDI - needed for the annotations
+    implementation libs.quarkus.arc
+
+    // Annotation processor for extension metadata
+    annotationProcessor 'io.quarkus:quarkus-extension-processor'
+
+    // Protobuf (for MessageLite interface)
+    implementation libs.protobuf.java
+
+    // SmallRye Reactive Messaging Kafka (for ClientCustomizer, @Channel, @Incoming)
+    implementation 'io.smallrye.reactive:smallrye-reactive-messaging-kafka'
+
+    // Apicurio Registry v3
+    implementation 'io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.2'
+}
+
+// Workaround for Gradle 9: disable validateExtension which performs unsafe configuration resolution
+tasks.matching { it.name == 'validateExtension' }.configureEach {
+    enabled = false
+}
