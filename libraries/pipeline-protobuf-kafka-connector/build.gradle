@@ -1,0 +1,4 @@
+// Root project for Pipeline Protobuf Kafka Connector
+// This is an aggregator - the actual modules are in runtime/ and deployment/
+// No build configuration needed here
+
