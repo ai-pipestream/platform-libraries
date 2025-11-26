@@ -19,7 +19,7 @@ import java.util.Set;
  * and ensures proper integration with the Apicurio Registry.</p>
  *
  * <h2>Purpose</h2>
- * <p>While the {@link ai.pipestream.kafka.connector.deployment.ProtobufKafkaProcessor}
+ * <p>While the Pipeline Protobuf Kafka Processor (build-time component)
  * handles build-time configuration generation, this class provides runtime
  * enforcement and fallback configuration. It acts as a safety net to ensure
  * that all Kafka channels use the correct serializers and registry settings.</p>
@@ -42,7 +42,6 @@ import java.util.Set;
  * (passwords, secrets, tokens) automatically redacted in the logs.</p>
  *
  * @see io.smallrye.reactive.messaging.ClientCustomizer
- * @see ai.pipestream.kafka.connector.deployment.ProtobufKafkaProcessor
  * @since 0.2.10
  */
 @ApplicationScoped
