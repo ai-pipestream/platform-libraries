@@ -58,6 +58,10 @@ include 'libraries:pipeline-protobuf-kafka-connector'
 include 'libraries:pipeline-protobuf-kafka-connector:runtime'
 include 'libraries:pipeline-protobuf-kafka-connector:deployment'
 include 'libraries:pipeline-protobuf-kafka-connector:integration-tests'
+
+// Set artifact names to match what users depend on and what extension metadata expects
+project(':libraries:pipeline-protobuf-kafka-connector:runtime').name = 'pipeline-protobuf-kafka-connector'
+project(':libraries:pipeline-protobuf-kafka-connector:deployment').name = 'pipeline-protobuf-kafka-connector-deployment'
 include 'libraries:dynamic-grpc'
 include 'libraries:dynamic-grpc-registration-clients'
 include 'libraries:grpc-wiremock'
