@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * up the appropriate deserializers, Apicurio Registry integration, and return class mapping.</p>
  *
  * <h2>Usage</h2>
- * <p>Use this annotation alongside {@link org.eclipse.microprofile.reactive.messaging.Incoming}
+ * <p>Use this annotation alongside the standard MicroProfile Reactive Messaging {@code @Incoming}
  * to declare message consumer methods:</p>
  * <pre>{@code
  * @ApplicationScoped
@@ -54,9 +54,7 @@ import java.lang.annotation.Target;
  * public void processOrder(OrderEvent order) { ... }
  * }</pre>
  *
- * @see org.eclipse.microprofile.reactive.messaging.Incoming
  * @see ProtobufChannel
- * @see ai.pipestream.kafka.connector.deployment.ProtobufKafkaProcessor
  * @since 0.2.10
  */
 @Target({ ElementType.METHOD })
