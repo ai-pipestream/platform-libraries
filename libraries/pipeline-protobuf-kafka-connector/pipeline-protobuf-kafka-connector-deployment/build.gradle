@@ -16,7 +16,7 @@ dependencies {
     implementation 'io.smallrye:jandex'
 
     // Runtime module (for types)
-    implementation project(':libraries:pipeline-protobuf-kafka-connector:runtime')
+    implementation project(':libraries:pipeline-protobuf-kafka-connector:pipeline-protobuf-kafka-connector')
     
     // Needed so the build step can resolve ApicurioConfigurator class
     implementation project(':libraries:pipeline-commons')
