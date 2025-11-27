@@ -8,7 +8,10 @@ plugins {
 
 dependencies {
     api platform("ai.pipestream:pipeline-bom:${rootProject.version}")
-    implementation libs.quarkus.grpc
+    // Depends on the lighter stubs module, not the full server
+    implementation 'io.quarkus:quarkus-grpc-stubs'
+    implementation 'io.smallrye.reactive:mutiny'
+
     implementation libs.quarkus.arc
     // Pin protobuf/grpc versions from parent's libs.versions.toml (available via settings.gradle)
     api libs.protobuf.java
@@ -59,6 +62,20 @@ tasks.withType(JavaExec) {
 compileJava {
     options.encoding = 'UTF-8'
     options.compilerArgs << '-parameters'
+}
+
+// 1. Disable the "Application" build step.
+// We only want the library JAR (produced by the standard 'jar' task),
+// not the quarkus-app/ directory or runner JARs.
+tasks.named("quarkusBuild").configure {
+    enabled = false
+}
+
+// 2. Optional: Ensure the standard JAR is built (usually true by default)
+tasks.named("jar").configure {
+    enabled = true
+    // Ensure it contains the Jandex index
+    dependsOn("jandex")
 }
 
 compileTestJava {
