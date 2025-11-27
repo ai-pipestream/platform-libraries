@@ -8,8 +8,23 @@ description = 'Pipeline Protobuf Kafka Connector Runtime - Annotations only'
 quarkusExtension {
     deploymentModule = 'pipeline-protobuf-kafka-connector-deployment'
     parentFirstArtifacts = [
+        // Protobuf core
         'com.google.protobuf:protobuf-java',
-        'ai.pipestream:grpc-stubs'
+        // gRPC - ALL artifacts must be parent-first for Quarkus gRPC extension to work
+        'io.grpc:grpc-api',
+        'io.grpc:grpc-stub',
+        'io.grpc:grpc-protobuf',
+        'io.grpc:grpc-core',
+        'io.grpc:grpc-context',
+        'io.grpc:grpc-netty',
+        'io.grpc:grpc-util',
+        'io.grpc:grpc-protobuf-lite',
+        // Pipeline gRPC stubs
+        'ai.pipestream:grpc-stubs',
+        // SmallRye Reactive Mutiny and its dependencies (needed for reactive gRPC and messaging)
+        'io.smallrye.reactive:mutiny',
+        // JCTools - required by Mutiny for high-performance queues
+        'org.jctools:jctools-core'
     ]
 }
 
