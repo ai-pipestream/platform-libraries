@@ -103,7 +103,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "generate": "buf generate ../grpc-stubs/src/main/proto && tsc",
+    "generate": "buf generate ../pipestream-protos/src/main/proto && tsc",
     "build": "npm run clean && npm run generate",
     "prepublishOnly": "npm run build"
   },

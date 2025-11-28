@@ -22,7 +22,8 @@ dependencies {
     implementation project(':libraries:pipeline-protobuf-kafka-connector:pipeline-protobuf-kafka-connector')
 
     // Protobuf stubs (for test messages)
-    implementation project(':grpc:grpc-stubs')
+    compileOnly project(':grpc:grpc-stubs')
+    testImplementation project(':grpc:grpc-stubs')
     // Protobuf stubs (for test messages)
     implementation project(':libraries:pipeline-commons')
 

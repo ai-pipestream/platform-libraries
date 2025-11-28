@@ -25,11 +25,11 @@ compileJava {
     options.encoding = 'UTF-8'
 }
 
-// Reference proto files from grpc-stubs project
+// Reference proto files from pipestream-protos project
 sourceSets {
     main {
         proto {
-            srcDir "${project(':grpc:grpc-stubs').projectDir}/src/main/proto"
+            srcDir "${project(':grpc:pipestream-protos').projectDir}/src/main/proto"
         }
     }
 }

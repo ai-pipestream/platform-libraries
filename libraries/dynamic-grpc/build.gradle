@@ -74,6 +74,13 @@ compileJava {
     dependsOn tasks.named('compileQuarkusGeneratedSourcesJava')
 }
 
+// Disable gRPC code generation for dynamic-grpc - it uses grpc-stubs instead
+// Using quarkusBuildProperties to avoid leaking application.properties to dependent projects  
+// Note: dynamic-grpc should use the generated stubs from grpc-stubs, not generate its own
+quarkus {
+    quarkusBuildProperties.put("quarkus.grpc.codegen.skip", "true")
+}
+
 compileTestJava {
     dependsOn tasks.named('jandex')
     // Ensure grpc-wiremock is built before compiling tests

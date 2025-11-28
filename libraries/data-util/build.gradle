@@ -46,6 +46,12 @@ test {
     systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
 }
 
+// Disable gRPC code generation for data-util - it's a utility library that doesn't need it
+// Using quarkusBuildProperties to avoid leaking application.properties to dependent projects
+quarkus {
+    quarkusBuildProperties.put("quarkus.grpc.codegen.skip", "true")
+}
+
 // Publishing configuration inherited from root project
 
 // Suppress enforced platform validation for publishing

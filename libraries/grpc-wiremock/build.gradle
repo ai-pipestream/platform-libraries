@@ -59,6 +59,12 @@ compileJava {
     options.compilerArgs << '-parameters'
 }
 
+// Disable gRPC code generation for grpc-wiremock - it should use stubs from grpc-stubs
+// Using quarkusBuildProperties to avoid leaking application.properties to dependent projects
+quarkus {
+    quarkusBuildProperties.put("quarkus.grpc.codegen.skip", "true")
+}
+
 compileTestJava {
     options.encoding = 'UTF-8'
 }

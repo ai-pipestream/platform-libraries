@@ -8,6 +8,6 @@ plugins:
       - target=ts
 
 inputs:
-  - directory: ../grpc-stubs/src/main/proto
+  - directory: ../pipestream-protos/src/main/proto
   - module: buf.build/grpc/grpc
   - module: buf.build/googleapis/googleapis

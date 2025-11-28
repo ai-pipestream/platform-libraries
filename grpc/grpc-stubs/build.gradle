@@ -17,6 +17,8 @@ dependencies {
     api libs.protobuf.java
     api libs.grpc.protobuf
     api libs.grpc.stub
+    // Depend on pipestream-protos for proto file scanning
+    implementation project(':grpc:pipestream-protos')
     testImplementation libs.quarkus.junit5
 }
 
@@ -95,14 +97,8 @@ description = 'Generated gRPC stubs with Mutiny support and descriptor set'
 
 // Publishing configuration inherited from root project
 
-// Generate descriptor via build-time properties (no application.properties leak)
-quarkus {
-    quarkusBuildProperties.put("quarkus.generate-code.grpc.descriptor-set.generate", "true")
-    quarkusBuildProperties.put("quarkus.generate-code.grpc.descriptor-set.name", "services.dsc")
-    // Suppress noisy Quarkus build warnings
-    quarkusBuildProperties.put("quarkus.log.level", "ERROR")
-    quarkusBuildProperties.put("quarkus.log.category.\"io.quarkus.bootstrap\".level", "ERROR")
-}
+// gRPC code generation configuration is in src/main/resources/application.properties
+// This allows Quarkus to properly scan proto files from the pipestream-protos dependency
 
 // Suppress enforced platform validation for publishing
 tasks.withType(GenerateModuleMetadata) {
