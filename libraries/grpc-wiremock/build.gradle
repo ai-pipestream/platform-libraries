@@ -28,7 +28,7 @@ dependencies {
     // Library dependencies (local projects)
     testImplementation project(':libraries:dynamic-grpc-registration-clients')
     testImplementation project(':libraries:dynamic-grpc')
-    testImplementation project(':libraries:pipeline-api')
+    testImplementation project(':libraries:pipeline-commons')
     
     // Testing dependencies
     testImplementation libs.hamcrest

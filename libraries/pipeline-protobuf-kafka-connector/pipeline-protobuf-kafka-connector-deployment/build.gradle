@@ -21,9 +21,6 @@ dependencies {
     // Needed so the build step can resolve ApicurioConfigurator class
     implementation project(':libraries:pipeline-commons')
 
-    // For Javadoc links to annotations in pipeline-api
-    compileOnly project(':libraries:pipeline-api')
-
     // Annotation processor for extension metadata (REQUIRED for @BuildStep discovery)
     annotationProcessor 'io.quarkus:quarkus-extension-processor'
 }

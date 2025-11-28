@@ -3,7 +3,6 @@ package ai.pipestream.common.interceptor;
 import ai.pipestream.api.annotation.ProcessingBuffered;
 import ai.pipestream.common.util.ProcessingBuffer;
 import ai.pipestream.common.util.ProcessingBufferFactory;
-import ai.pipestream.data.module.ModuleProcessRequest;
 import ai.pipestream.data.v1.PipeDoc;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.Priority;

@@ -13,7 +13,6 @@ dependencies {
 
     // Internal dependencies
     implementation project(':grpc:grpc-stubs')
-    implementation project(':libraries:pipeline-api')
     implementation project(':libraries:pipeline-commons')
 
     // Protobuf

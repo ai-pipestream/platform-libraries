@@ -14,8 +14,8 @@ dependencies {
     // Protobuf
     implementation libs.protobuf.java
 
-    implementation project(':libraries:pipeline-api')
-
+    compileOnly project(':grpc:grpc-stubs')
+    testImplementation project(':grpc:grpc-stubs')
     // Testing
     testImplementation libs.quarkus.junit5
 

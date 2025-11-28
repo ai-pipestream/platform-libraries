@@ -37,8 +37,8 @@ dependencies {
     
     // --- Commons dependencies ---
     implementation project(':grpc:grpc-stubs')
-    implementation project(':libraries:pipeline-api')
-    
+    implementation project(':libraries:pipeline-commons')
+
     // --- Testing ---
     testImplementation libs.quarkus.junit5
     testImplementation libs.quarkus.junit5.mockito

@@ -20,9 +20,6 @@ dependencies {
 
     // Include the extension runtime (which automatically pulls in deployment module)
     implementation project(':libraries:pipeline-protobuf-kafka-connector:pipeline-protobuf-kafka-connector')
-    
-    // Protobuf stubs (for test messages)
-    implementation project(':libraries:pipeline-api')
 
     // Protobuf stubs (for test messages)
     implementation project(':grpc:grpc-stubs')

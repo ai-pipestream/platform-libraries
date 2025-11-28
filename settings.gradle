@@ -51,7 +51,6 @@ include 'grpc:grpc-stubs'
 include 'grpc:grpc-google-descriptor'
 
 // library modules
-include 'libraries:pipeline-api'
 include 'libraries:pipeline-commons'
 include 'libraries:data-util'
 include 'libraries:pipeline-protobuf-kafka-connector'
