@@ -40,7 +40,7 @@ import java.util.List;
  * <h2>Key Features</h2>
  * <ul>
  *   <li>Automatic Protobuf type detection from method parameters and field generics</li>
- *   <li>Topic name derivation from channel names (removes -in/-out suffixes)</li>
+ *   <li>Topic name derivation from channel names (removes -producer/-consumer/-in/-out suffixes)</li>
  *   <li>Global Apicurio Registry URL bridging</li>
  *   <li>Parent-first classloading configuration for Protobuf artifacts</li>
  *   <li>Annotation-based property overrides</li>
@@ -270,15 +270,23 @@ public class ProtobufKafkaProcessor {
     /**
      * Derives the Kafka topic name from a channel name.
      *
-     * <p>This method implements a simple convention for topic naming:</p>
+     * <p>This method implements a simple convention for topic naming by removing
+     * directional suffixes from channel names. This allows using descriptive channel
+     * names like "orders-in" and "orders-out" while mapping them to the same
+     * underlying Kafka topic "orders".</p>
+     *
+     * <h3>Supported Suffixes</h3>
      * <ul>
-     *   <li>Channels ending in "-in" have the suffix removed (e.g., "orders-in" → "orders")</li>
-     *   <li>Channels ending in "-out" have the suffix removed (e.g., "orders-out" → "orders")</li>
-     *   <li>Other channels are used as-is</li>
+     *   <li>{@code "-consumer"} → removed (e.g., "orders-consumer" → "orders")</li>
+     *   <li>{@code "-producer"} → removed (e.g., "orders-producer" → "orders")</li>
+     *   <li>{@code "-in"} → removed (e.g., "orders-in" → "orders")</li>
+     *   <li>{@code "-out"} → removed (e.g., "orders-out" → "orders")</li>
+     *   <li>No suffix → channel name used as-is</li>
      * </ul>
      *
-     * <p>This allows using descriptive channel names like "orders-in" and "orders-out"
-     * while mapping them to the same underlying Kafka topic "orders".</p>
+     * <p><strong>Note:</strong> Suffixes are checked in order from longest to shortest
+     * to avoid partial matches (e.g., "-consumer" is checked before "-in" to prevent
+     * "orders-consumer" from being incorrectly truncated).</p>
      *
      * @param channel The channel name from the annotation
      * @return The derived topic name, or the original channel name if no derivation applies
@@ -287,10 +295,15 @@ public class ProtobufKafkaProcessor {
      * @see ai.pipestream.api.annotation.ProtobufChannel#value()
      */
     private String deriveTopicName(String channel) {
-        if (channel.endsWith("-in")) {
-            return channel.substring(0, channel.length() - 3);
+        // Check longer suffixes first to avoid partial matches
+        if (channel.endsWith("-consumer")) {
+            return channel.substring(0, channel.length() - 9);
+        } else if (channel.endsWith("-producer")) {
+            return channel.substring(0, channel.length() - 9);
         } else if (channel.endsWith("-out")) {
             return channel.substring(0, channel.length() - 4);
+        } else if (channel.endsWith("-in")) {
+            return channel.substring(0, channel.length() - 3);
         }
         return channel;
     }

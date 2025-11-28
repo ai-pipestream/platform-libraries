@@ -6,20 +6,32 @@
 
 1. **Add dependency** to `build.gradle`:
    ```groovy
-   implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'
+   implementation 'ai.pipestream:pipeline-protobuf-kafka-connector:0.2.11-SNAPSHOT'
    ```
 
 2. **Add infrastructure URLs** to `application.properties`:
    ```properties
    kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
-   mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+   apicurio.registry.url=${APICURIO_REGISTRY_URL}
    ```
+   **Note:** The extension automatically bridges `apicurio.registry.url` to SmallRye's configuration, so you only need to set it once.
 
-3. **Use in your code:**
+3. **Use in your code with annotations:**
    ```java
-   // Both emitter types work automatically
-   @Channel("events-producer") MutinyEmitter<MyEvent> emitter;
-   @Incoming("events-consumer") ConsumerRecord<UUID, MyEvent> consume(record);
+   import ai.pipestream.api.annotation.ProtobufChannel;
+   import ai.pipestream.api.annotation.ProtobufIncoming;
+   
+   // Producer: Both emitter types work automatically
+   @Channel("events-producer")
+   @ProtobufChannel("events-producer")
+   MutinyEmitter<MyEvent> emitter;
+   
+   // Consumer: Must use @ProtobufIncoming annotation
+   @Incoming("events-consumer")
+   @ProtobufIncoming("events-consumer")
+   public void consume(ConsumerRecord<UUID, MyEvent> record) {
+       // Process event
+   }
    ```
 
 **That's it!** The extension handles all Kafka configuration automatically.
@@ -39,8 +51,10 @@
 ```properties
 # REQUIRED: Infrastructure URLs
 kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
-mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+apicurio.registry.url=${APICURIO_REGISTRY_URL}
 ```
+
+**Note:** The extension automatically bridges `apicurio.registry.url` to `mp.messaging.connector.smallrye-kafka.apicurio.registry.url`.
 
 **Optional:** Custom topic mapping if needed:
 ```properties
@@ -92,21 +106,33 @@ mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_
 
 ### Producer (Both Emitter Types Work)
 ```java
+import ai.pipestream.api.annotation.ProtobufChannel;
+import io.smallrye.reactive.messaging.MutinyEmitter;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+
 @Channel("user-events-producer")
+@ProtobufChannel("user-events-producer")  // REQUIRED annotation
 MutinyEmitter<UserEvent> mutinyEmitter;
 
 // OR
 
 @Channel("user-events-producer")
+@ProtobufChannel("user-events-producer")  // REQUIRED annotation
 Emitter<UserEvent> emitter;
 ```
 
 ### Consumer
 ```java
+import ai.pipestream.api.annotation.ProtobufIncoming;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import java.util.UUID;
+
 @Incoming("user-events-consumer")
-public Uni<Void> consume(ConsumerRecord<UUID, UserEvent> record) {
+@ProtobufIncoming("user-events-consumer")  // REQUIRED annotation
+public void consume(ConsumerRecord<UUID, UserEvent> record) {
     // Automatic UUID key + Protobuf value deserialization
-    return processEvent(record.value());
+    processEvent(record.value());
 }
 ```
 
@@ -114,16 +140,18 @@ public Uni<Void> consume(ConsumerRecord<UUID, UserEvent> record) {
 
 ### Messages not being sent/received
 - **Infrastructure URLs set?** Check `kafka.bootstrap.servers` and `apicurio.registry.url`
+- **Annotations present?** Both `@Channel`/`@Incoming` AND `@ProtobufChannel`/`@ProtobufIncoming` are required
 - **Channel name conflicts?** Don't use same name for `@Channel` and `@Incoming`
-- **Extension dependency?** Verify `pipeline-kafka-quarkus-extension` is in `build.gradle`
+- **Extension dependency?** Verify `pipeline-protobuf-kafka-connector` is in `build.gradle`
 
 ### Serialization errors
 - **Protobuf classes?** Extension only works with Protobuf messages from `grpc-stubs`
 - **Consumer signature?** Must use `ConsumerRecord<UUID, YourProtobufType>`
 
 ### Build errors
+- **Annotations missing?** Must use both `@Channel`/`@Incoming` AND `@ProtobufChannel`/`@ProtobufIncoming`
 - **Channel names?** Use directional suffixes like `-producer`, `-consumer`
-- **Dependencies?** Need `pipeline-commons`, `grpc-stubs`, and the extension
+- **Dependencies?** Need `pipeline-protobuf-kafka-connector`, `grpc-stubs`, and `quarkus-messaging-kafka`
 
 ### Need custom topic names
 ```properties
@@ -142,8 +170,9 @@ Add the Kafka extension to your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation platform('ai.pipestream:pipeline-bom:0.2.10') // or later
-    implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'  // This handles everything!
+    implementation platform('ai.pipestream:pipeline-bom:0.2.11-SNAPSHOT') // or later
+    implementation 'ai.pipestream:pipeline-protobuf-kafka-connector:0.2.11-SNAPSHOT'  // Extension
+    implementation 'io.quarkus:quarkus-messaging-kafka'  // SmallRye Reactive Messaging
     implementation 'ai.pipestream:grpc-stubs'  // Your protobuf types
 }
 ```
@@ -155,7 +184,8 @@ You MUST configure the infrastructure URLs in all environments:
 ```properties
 # REQUIRED: Infrastructure settings
 kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
-mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+apicurio.registry.url=${APICURIO_REGISTRY_URL}
+# Note: Extension automatically bridges apicurio.registry.url to SmallRye config
 ```
 
 ### 3. Application Code (Zero Kafka Config Needed!)
@@ -164,14 +194,18 @@ Just use channel names in your code. The extension handles all Kafka-related con
 
 **Producer:**
 ```java
+import ai.pipestream.api.annotation.ProtobufChannel;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
 @ApplicationScoped
 public class ValidationPublisher {
-    @Channel("validation-events-producer")  // Automatically maps to topic "validation-events"
+    @Inject
+    @Channel("validation-events-producer")
+    @ProtobufChannel("validation-events-producer")  // REQUIRED: Enables extension processing
     MutinyEmitter<ValidationEvent> emitter;
 
     public Uni<Void> publishValidation(ValidationEvent event) {
@@ -182,6 +216,7 @@ public class ValidationPublisher {
 
 **Consumer:**
 ```java
+import ai.pipestream.api.annotation.ProtobufIncoming;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -190,10 +225,11 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ValidationConsumer {
-    @Incoming("validation-events-consumer")  // Automatically maps to topic "validation-events"
-    public Uni<Void> consume(ConsumerRecord<UUID, ValidationEvent> record) {
+    @Incoming("validation-events-consumer")
+    @ProtobufIncoming("validation-events-consumer")  // REQUIRED: Enables extension processing
+    public void consume(ConsumerRecord<UUID, ValidationEvent> record) {
         // Automatic UUID key deserialization + Protobuf value deserialization
-        return processValidation(record.value());
+        processValidation(record.value());
     }
 }
 ```
@@ -243,7 +279,7 @@ services:
 
 # Infrastructure URLs (provided by compose-devservices)
 %test.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS:localhost:9095}
-%test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3}
+%test.apicurio.registry.url=${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3}
 
 # The extension handles ALL OTHER Kafka configuration automatically!
 # No manual serializers, deserializers, connector settings, etc. needed!
@@ -307,14 +343,27 @@ mp.messaging.incoming.events.topic=events
 **After (Extension):**
 ```groovy
 dependencies {
-    implementation 'ai.pipestream:pipeline-kafka-quarkus-extension'  // Just this
+    implementation 'ai.pipestream:pipeline-protobuf-kafka-connector:0.2.11-SNAPSHOT'
+    implementation 'io.quarkus:quarkus-messaging-kafka'
+    implementation 'ai.pipestream:grpc-stubs'
 }
 ```
 
 ```properties
 # Only infrastructure URLs needed - extension handles everything else!
 kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVERS}
-mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_URL}
+apicurio.registry.url=${APICURIO_REGISTRY_URL}
+```
+
+```java
+// Must use both annotations together
+@Channel("events-producer")
+@ProtobufChannel("events-producer")  // REQUIRED
+MutinyEmitter<MyEvent> emitter;
+
+@Incoming("events-consumer")
+@ProtobufIncoming("events-consumer")  // REQUIRED
+public void consume(ConsumerRecord<UUID, MyEvent> record) { }
 ```
 
 ### Migration Steps
@@ -351,9 +400,10 @@ mp.messaging.connector.smallrye-kafka.apicurio.registry.url=${APICURIO_REGISTRY_
 
 ✅ **ONLY** configure:
 - `kafka.bootstrap.servers`
-- `mp.messaging.connector.smallrye-kafka.apicurio.registry.url`
+- `apicurio.registry.url` (automatically bridged to SmallRye config)
 - Optional custom topic mappings
 - Your channel names in code
+- **Use `@ProtobufChannel` and `@ProtobufIncoming` annotations** (required!)
 
 The extension enforces platform standards automatically. Manual configuration will conflict with the extension and cause issues.
 
@@ -361,7 +411,7 @@ The extension enforces platform standards automatically. Manual configuration wi
 
 **The Extension's Magic:**
 
-1. **Scans your code** during build-time for `@Channel` and `@Incoming` annotations
+1. **Scans your code** during build-time for `@ProtobufChannel` and `@ProtobufIncoming` annotations
 2. **Generates configuration** automatically based on your channel names
 3. **Applies platform standards** (UUID keys, Protobuf values, reliability settings)
 4. **Maps channels to topics** using intelligent naming rules
