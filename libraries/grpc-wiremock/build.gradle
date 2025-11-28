@@ -22,7 +22,9 @@ dependencies {
     api libs.quarkus.mutiny
 
     // Depend on grpc modules from monorepo
-    api project(':grpc:grpc-stubs')
+    // Use compileOnly/testImplementation to prevent transitive inclusion - each consuming project must explicitly include grpc-stubs
+    compileOnly project(':grpc:grpc-stubs')
+    testImplementation project(':grpc:grpc-stubs')
     api project(':grpc:grpc-google-descriptor')
 
     // Library dependencies (local projects)

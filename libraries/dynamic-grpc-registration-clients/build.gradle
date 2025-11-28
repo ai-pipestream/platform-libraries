@@ -28,7 +28,9 @@ dependencies {
     implementation libs.quarkus.cache
     
     // --- Commons dependencies ---
-    implementation project(':grpc:grpc-stubs')
+    // Use compileOnly/testImplementation to prevent transitive inclusion - each consuming project must explicitly include grpc-stubs
+    compileOnly project(':grpc:grpc-stubs')
+    testImplementation project(':grpc:grpc-stubs')
     implementation project(':libraries:dynamic-grpc')
     
     // --- Testing ---
