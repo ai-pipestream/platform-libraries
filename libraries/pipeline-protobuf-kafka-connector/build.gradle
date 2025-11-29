@@ -1,9 +1,0 @@
-plugins {
-    // Base plugin keeps lifecycle tasks (clean, assemble) without applying publishing to this aggregator project
-    id 'base'
-}
-
-// Root project for Pipeline Protobuf Kafka Connector
-// This is an aggregator - the actual modules are in runtime/ and deployment/
-// No build configuration needed here - subprojects handle their own publishing
-

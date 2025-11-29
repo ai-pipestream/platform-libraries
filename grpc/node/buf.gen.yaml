@@ -6,6 +6,7 @@ plugins:
     out: dist
     opt:
       - target=ts
+      - import_extension=.js
 
 inputs:
   - directory: ../pipestream-protos/src/main/proto
