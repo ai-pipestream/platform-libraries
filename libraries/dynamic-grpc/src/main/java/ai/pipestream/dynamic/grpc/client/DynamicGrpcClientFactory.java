@@ -4,9 +4,8 @@ import io.grpc.Channel;
 import io.grpc.EquivalentAddressGroup;
 import io.grpc.NameResolver;
 import io.grpc.NameResolverProvider;
-import ai.pipestream.data.module.MutinyPipeStepProcessorGrpc;
-import ai.pipestream.data.module.MutinyPipeStepProcessorGrpc.MutinyPipeStepProcessorStub;
-import ai.pipestream.platform.registration.MutinyPlatformRegistrationGrpc;
+// Removed static imports to avoid eager class loading in Quarkus test classloader
+// Using fully qualified names everywhere instead
 import io.smallrye.mutiny.Uni;
 import io.smallrye.stork.Stork;
 import io.smallrye.stork.api.Service;
@@ -49,9 +48,9 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      * @param serviceName the logical service name
      * @return a Uni emitting the MutinyPipeStepProcessorStub
      */
-    public Uni<MutinyPipeStepProcessorStub> getMutinyClientForService(String serviceName) {
+    public Uni<ai.pipestream.data.module.MutinyPipeStepProcessorGrpc.MutinyPipeStepProcessorStub> getMutinyClientForService(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(MutinyPipeStepProcessorGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.data.module.MutinyPipeStepProcessorGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -60,9 +59,9 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      * @param serviceName the logical service name
      * @return a Uni emitting the MutinyPlatformRegistrationStub
      */
-    public Uni<MutinyPlatformRegistrationGrpc.MutinyPlatformRegistrationStub> getPlatformRegistrationClient(String serviceName) {
+    public Uni<ai.pipestream.platform.registration.MutinyPlatformRegistrationGrpc.MutinyPlatformRegistrationStub> getPlatformRegistrationClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(MutinyPlatformRegistrationGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.platform.registration.MutinyPlatformRegistrationGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -73,7 +72,7 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      */
     public Uni<ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc.MutinyOpenSearchManagerServiceStub> getOpenSearchManagerClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -84,7 +83,7 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      */
     public Uni<ai.pipestream.repository.account.MutinyAccountServiceGrpc.MutinyAccountServiceStub> getAccountServiceClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(ai.pipestream.repository.account.MutinyAccountServiceGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.repository.account.MutinyAccountServiceGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -95,7 +94,7 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      */
     public Uni<ai.pipestream.connector.intake.MutinyConnectorAdminServiceGrpc.MutinyConnectorAdminServiceStub> getConnectorAdminServiceClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(ai.pipestream.connector.intake.MutinyConnectorAdminServiceGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.connector.intake.MutinyConnectorAdminServiceGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -106,7 +105,7 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      */
     public Uni<ai.pipestream.repository.filesystem.MutinyFilesystemServiceGrpc.MutinyFilesystemServiceStub> getFilesystemServiceClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(ai.pipestream.repository.filesystem.MutinyFilesystemServiceGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.repository.filesystem.MutinyFilesystemServiceGrpc.newMutinyStub(channel));
     }
 
     /**
@@ -117,7 +116,7 @@ public class DynamicGrpcClientFactory implements ai.pipestream.common.grpc.GrpcC
      */
     public Uni<ai.pipestream.repository.filesystem.upload.MutinyNodeUploadServiceGrpc.MutinyNodeUploadServiceStub> getNodeUploadServiceClient(String serviceName) {
         validateServiceName(serviceName);
-        return getChannel(serviceName).map(ai.pipestream.repository.filesystem.upload.MutinyNodeUploadServiceGrpc::newMutinyStub);
+        return getChannel(serviceName).map(channel -> ai.pipestream.repository.filesystem.upload.MutinyNodeUploadServiceGrpc.newMutinyStub(channel));
     }
 
     private Uni<Channel> getChannel(String serviceName) {
