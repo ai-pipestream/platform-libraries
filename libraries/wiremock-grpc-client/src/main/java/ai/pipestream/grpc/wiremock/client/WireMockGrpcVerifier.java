@@ -98,7 +98,7 @@ public class WireMockGrpcVerifier {
      * This clears the request journal, so previous verifications won't affect future ones.
      */
     public void resetRequests() {
-        WireMock.resetRequests();
+        WireMock.resetAllRequests();
     }
     
     /**

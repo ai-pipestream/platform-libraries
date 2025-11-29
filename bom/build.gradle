@@ -46,7 +46,7 @@ dependencies {
         api("ai.pipestream:grpc-google-descriptor:${version}")
 
         // library modules - all in release train
-        api("ai.pipestream:grpc-wiremock:${version}")
+        api("ai.pipestream:wiremock-grpc-client:${version}")
         api("ai.pipestream:pipeline-api:${version}")
         api("ai.pipestream:pipeline-commons:${version}")
         api("ai.pipestream:dynamic-grpc:${version}")

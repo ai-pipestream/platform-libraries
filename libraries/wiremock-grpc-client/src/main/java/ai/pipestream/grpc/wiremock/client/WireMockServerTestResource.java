@@ -14,14 +14,14 @@ public class WireMockServerTestResource implements QuarkusTestResourceLifecycleM
 
     private GenericContainer<?> wiremockServer;
     private static final int WIREMOCK_HTTP_PORT = 8080;
-    // private static final int WIREMOCK_GRPC_PORT = 50051; // gRPC is multiplexed over HTTP port
+    private static final int WIREMOCK_STREAMING_PORT = 50052;
     private static final String WIREMOCK_IMAGE_NAME = "ai-pipestream/pipestream-wiremock-server:latest";
 
     @Override
     public Map<String, String> start() {
         // Start the WireMock server Docker container
         wiremockServer = new GenericContainer<>(WIREMOCK_IMAGE_NAME)
-                .withExposedPorts(WIREMOCK_HTTP_PORT) // Only expose HTTP port
+                .withExposedPorts(WIREMOCK_HTTP_PORT, WIREMOCK_STREAMING_PORT) // Expose streaming port
                 .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("WireMockContainer")))
                 .waitingFor(Wait.forHttp("/__admin/health").forPort(WIREMOCK_HTTP_PORT).withStartupTimeout(Duration.ofSeconds(120)));
 
@@ -29,7 +29,7 @@ public class WireMockServerTestResource implements QuarkusTestResourceLifecycleM
 
         // Provide the dynamically assigned HTTP port to Quarkus tests
         System.setProperty("wiremock.url", "http://localhost:" + wiremockServer.getMappedPort(WIREMOCK_HTTP_PORT));
-        // System.setProperty("wiremock.grpc.port", String.valueOf(wiremockServer.getMappedPort(WIREMOCK_GRPC_PORT))); // Not used
+        System.setProperty("wiremock.streaming.port", String.valueOf(wiremockServer.getMappedPort(WIREMOCK_STREAMING_PORT)));
 
         return Collections.singletonMap("wiremock.url", "http://localhost:" + wiremockServer.getMappedPort(WIREMOCK_HTTP_PORT));
     }
@@ -40,6 +40,6 @@ public class WireMockServerTestResource implements QuarkusTestResourceLifecycleM
             wiremockServer.stop();
         }
         System.clearProperty("wiremock.url");
-        // System.clearProperty("wiremock.grpc.port");
+        System.clearProperty("wiremock.streaming.port");
     }
 }

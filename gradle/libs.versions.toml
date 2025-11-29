@@ -183,6 +183,9 @@ pipestream-test-documents = { module = "ai.pipestream:test-documents", version.r
 pipestream-parser-pipedoc-parsed = { module = "ai.pipestream:parser-pipedoc-parsed", version.ref = "sample-documents" }
 pipestream-double-chunked-pipedocs = { module = "ai.pipestream:double-chunked-pipedocs", version.ref = "sample-documents" }
 
+# WireMock gRPC Client (New Library)
+pipestream-wiremock-grpc-client = { module = "ai.pipestream:wiremock-grpc-client" }
+
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }
 jandex = { id = "org.kordamp.gradle.jandex", version.ref = "jandex-plugin" }

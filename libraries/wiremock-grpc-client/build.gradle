@@ -16,9 +16,8 @@ dependencies {
         exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
     } // Need compile access for GenericContainer in TestResource
 
-    // WireMock client for configuring stubs via HTTP Admin API
-    // We don't use wiremock-standalone here because the server is external
-    implementation(libs.wiremock.core) {
+    // WireMock client
+    api(libs.wiremock.core) {
         exclude group: 'com.google.protobuf', module: 'protobuf-java'
         exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
     }
