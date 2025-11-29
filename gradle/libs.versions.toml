@@ -130,6 +130,7 @@ quarkus-mcp-server-sse = { module = "io.quarkiverse.mcp:quarkus-mcp-server-sse",
 # WireMock Standalone (for grpc-wiremock library)
 wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock-standalone" }
 wiremock-grpc-extension-standalone = { module = "org.wiremock:wiremock-grpc-extension-standalone", version.ref = "wiremock-grpc-extension" }
+wiremock-grpc-extension = { module = "org.wiremock:wiremock-grpc-extension", version.ref = "wiremock-grpc-extension" }
 wiremock-core = { module = "org.wiremock:wiremock", version.ref = "wiremock" }
 
 # AWS SDK

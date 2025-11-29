@@ -28,6 +28,9 @@ class LiveRegistrationServiceTest {
     @ConfigProperty(name = "wiremock.url")
     String wiremockUrl;
 
+    @ConfigProperty(name = "wiremock.streaming.port")
+    int streamingPort;
+
     @org.junit.jupiter.api.BeforeEach
     void setupStork() {
         int httpPort = Integer.parseInt(wiremockUrl.substring(wiremockUrl.lastIndexOf(":") + 1));
@@ -39,10 +42,17 @@ class LiveRegistrationServiceTest {
         if (io.smallrye.stork.Stork.getInstance() != null) io.smallrye.stork.Stork.shutdown();
         io.smallrye.stork.Stork.initialize(new io.smallrye.stork.integration.DefaultStorkInfrastructure());
         
+        // 1. Standard WireMock (HTTP/gRPC) service
         var params = java.util.Map.of("address-list", "localhost:" + httpPort);
         var discoveryConfig = new io.smallrye.stork.spi.config.SimpleServiceConfig.SimpleServiceDiscoveryConfig("static", params);
         io.smallrye.stork.api.ServiceDefinition definition = io.smallrye.stork.api.ServiceDefinition.of(discoveryConfig);
         io.smallrye.stork.Stork.getInstance().defineIfAbsent(REGISTRATION_SERVICE_NAME, definition);
+
+        // 2. Streaming WireMock (Direct gRPC) service
+        var streamingParams = java.util.Map.of("address-list", "localhost:" + streamingPort);
+        var streamingConfig = new io.smallrye.stork.spi.config.SimpleServiceConfig.SimpleServiceDiscoveryConfig("static", streamingParams);
+        io.smallrye.stork.api.ServiceDefinition streamingDefinition = io.smallrye.stork.api.ServiceDefinition.of(streamingConfig);
+        io.smallrye.stork.Stork.getInstance().defineIfAbsent("streaming-registration-service", streamingDefinition);
     }
 
     @Test
@@ -66,6 +76,31 @@ class LiveRegistrationServiceTest {
         
         var response = client.getService(request).await().atMost(Duration.ofSeconds(5));
         assertThat(response.getServiceName()).isEqualTo("test-service");
+    }
+
+    @Test
+    void testStreamingRegistration() {
+        // Use the service pointing to the streaming port
+        var registrationClient = factory.getPlatformRegistrationClient("streaming-registration-service")
+                .await().atMost(Duration.ofSeconds(5));
+
+        var serviceInfo = ServiceRegistrationRequest.newBuilder()
+                .setServiceName("streaming-test-service")
+                .setHost("localhost")
+                .setPort(9090)
+                .setVersion("1.0.0")
+                .build();
+
+        // The DirectWireMockGrpcServer inside the container is hardcoded to return a stream of events
+        // for registerService. We expect about 6 events.
+        var events = registrationClient.registerService(serviceInfo)
+                .collect().asList()
+                .await().atMost(Duration.ofSeconds(10));
+
+        assertThat(events).isNotEmpty();
+        assertThat(events.size()).isGreaterThan(1); // Verify it's a stream, not just one event
+        assertThat(events.get(0).getEventType()).isEqualTo(ai.pipestream.platform.registration.EventType.STARTED);
+        assertThat(events.get(events.size() - 1).getEventType()).isEqualTo(ai.pipestream.platform.registration.EventType.COMPLETED);
     }
 
     @Test

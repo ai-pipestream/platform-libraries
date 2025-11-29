@@ -29,6 +29,7 @@ public class WireMockServerTestResource implements QuarkusTestResourceLifecycleM
 
         // Provide the dynamically assigned HTTP port to Quarkus tests
         System.setProperty("wiremock.url", "http://localhost:" + wiremockServer.getMappedPort(WIREMOCK_HTTP_PORT));
+        System.setProperty("wiremock.http.port", String.valueOf(wiremockServer.getMappedPort(WIREMOCK_HTTP_PORT)));
         System.setProperty("wiremock.streaming.port", String.valueOf(wiremockServer.getMappedPort(WIREMOCK_STREAMING_PORT)));
 
         return Collections.singletonMap("wiremock.url", "http://localhost:" + wiremockServer.getMappedPort(WIREMOCK_HTTP_PORT));
@@ -40,6 +41,7 @@ public class WireMockServerTestResource implements QuarkusTestResourceLifecycleM
             wiremockServer.stop();
         }
         System.clearProperty("wiremock.url");
+        System.clearProperty("wiremock.http.port");
         System.clearProperty("wiremock.streaming.port");
     }
 }

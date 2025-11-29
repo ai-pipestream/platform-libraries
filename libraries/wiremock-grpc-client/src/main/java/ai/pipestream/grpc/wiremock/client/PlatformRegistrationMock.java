@@ -18,7 +18,9 @@ import static ai.pipestream.grpc.wiremock.client.WireMockGrpcClient.*;
  * This mock helper configures WireMock to return a single event (unary style) which is
  * typically sufficient for simple integration tests.
  * 
- * For true streaming tests, use DirectWireMockGrpcServer.
+ * For true streaming tests, use the exposed 'wiremock.streaming.port' provided by
+ * WireMockServerTestResource, which points to the sidecar DirectWireMockGrpcServer
+ * running inside the container.
  */
 public class PlatformRegistrationMock {
 

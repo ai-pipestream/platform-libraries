@@ -1,0 +1,18 @@
+{
+  "request": {
+    "urlPath": "/ai.pipestream.platform.registration.PlatformRegistration/ListServices",
+    "method": "POST",
+    "bodyPatterns": [
+      {
+        "equalToJson": "{}"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "body": "{ \n  \"services\": [ { \n    \"serviceName\": \"repository-service\", \n    \"serviceId\": \"repo-1\", \n    \"host\": \"localhost\", \n    \"port\": 8080, \n    \"version\": \"1.0.0\", \n    \"isHealthy\": true \n  } ], \n  \"totalCount\": 1 \n}",
+    "headers": {
+      "grpc-status-name": "OK"
+    }
+  }
+}

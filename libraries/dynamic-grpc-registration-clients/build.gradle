@@ -42,6 +42,7 @@ dependencies {
     testImplementation libs.testcontainers.consul
     testImplementation libs.testcontainers.junit
     testImplementation project(':libraries:data-util')
+    testImplementation project(':libraries:wiremock-grpc-client')
 }
 
 java {

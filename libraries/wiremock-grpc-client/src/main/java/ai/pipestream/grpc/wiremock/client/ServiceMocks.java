@@ -20,6 +20,7 @@ public class ServiceMocks {
     private SimpleServiceMock mappingServiceMock;
     private SimpleServiceMock engineServiceMock;
     private SimpleServiceMock designModeServiceMock;
+    private RepositoryServiceMock repositoryServiceMock;
     
     /**
      * Creates a service mocks factory.
@@ -99,6 +100,18 @@ public class ServiceMocks {
         }
         return designModeServiceMock;
     }
+
+    /**
+     * Get or create the Repository Service mock.
+     *
+     * @return the RepositoryServiceMock instance
+     */
+    public RepositoryServiceMock repository() {
+        if (repositoryServiceMock == null) {
+            repositoryServiceMock = new RepositoryServiceMock();
+        }
+        return repositoryServiceMock;
+    }
     
     /**
      * Setup default mocks for all services (useful for basic testing).
@@ -127,6 +140,9 @@ public class ServiceMocks {
             
         designMode()
             .setupDefaults();
+
+        repository()
+            .mockSaveDocument("default-doc-id");
             
         return this;
     }
@@ -147,6 +163,7 @@ public class ServiceMocks {
         mappingServiceMock = null;
         engineServiceMock = null;
         designModeServiceMock = null;
+        repositoryServiceMock = null;
         return this;
     }
 }
