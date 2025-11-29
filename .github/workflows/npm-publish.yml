@@ -11,6 +11,8 @@ on:
       - 'grpc/grpc-stubs/src/main/proto/**'
       - 'grpc/node/**'
       - '.github/workflows/npm-publish.yml'
+    tags:
+      - 'v*'                    # Publish stable on version tags (e.g., v0.2.11)
   workflow_dispatch:
     inputs:
       version:
@@ -61,8 +63,13 @@ jobs:
         working-directory: grpc/node
         shell: bash
         run: |
-          # Use input version if provided, otherwise generate alpha
-          if [ -n "${{ inputs.version }}" ]; then
+          # Priority: 1) Git tag, 2) Input version, 3) Generate alpha
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Extract version from git tag (e.g., v0.2.11 -> 0.2.11)
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            TAG="latest"
+            echo "Publishing stable from git tag: ${VERSION}"
+          elif [ -n "${{ inputs.version }}" ]; then
             VERSION="${{ inputs.version }}"
             TAG="${{ inputs.tag }}"
             echo "Using specified version: ${VERSION} with tag: ${TAG}"
