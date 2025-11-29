@@ -9,7 +9,8 @@ plugins {
 dependencies {
     api platform("ai.pipestream:pipeline-bom:${rootProject.version}")
     // Depends on the lighter stubs module, not the full server
-    implementation 'io.quarkus:quarkus-grpc-stubs'
+    // Must be 'api' so consumers can access grpc.health.v1.MutinyHealthGrpc and other classes
+    api 'io.quarkus:quarkus-grpc-stubs'
     implementation 'io.smallrye.reactive:mutiny'
 
     implementation libs.quarkus.arc
@@ -17,6 +18,8 @@ dependencies {
     api libs.protobuf.java
     api libs.grpc.protobuf
     api libs.grpc.stub
+    // Provides grpc/health/v1/health.proto for import resolution during code generation
+    implementation libs.grpc.services
     // Depend on pipestream-protos for proto file scanning
     implementation project(':grpc:pipestream-protos')
     testImplementation libs.quarkus.junit5

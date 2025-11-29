@@ -10,5 +10,6 @@ plugins:
 
 inputs:
   - directory: ../pipestream-protos/src/main/proto
+  - directory: protos  # Node-only protos (e.g., shell_service)
   - module: buf.build/grpc/grpc
   - module: buf.build/googleapis/googleapis

@@ -1,6 +1,6 @@
 {
   "name": "@ai-pipestream/grpc-stubs",
-  "version": "0.1.6-alpha.20251119081616",
+  "version": "0.2.12",
   "description": "Generated gRPC stubs for Pipestream AI platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -103,7 +103,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "generate": "buf generate ../pipestream-protos/src/main/proto && tsc",
+    "generate": "buf generate && tsc",
     "build": "npm run clean && npm run generate",
     "prepublishOnly": "npm run build"
   },

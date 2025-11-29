@@ -45,7 +45,7 @@ dependencies {
     testImplementation libs.quarkus.junit5
     testImplementation libs.quarkus.junit5.mockito
     testImplementation libs.rest.assured
-    testImplementation project(':libraries:grpc-wiremock')
+    testImplementation project(':libraries:wiremock-grpc-client')
     testImplementation libs.assertj.core
     testImplementation libs.awaitility
     testImplementation libs.testcontainers.consul
@@ -86,7 +86,7 @@ quarkus {
 compileTestJava {
     dependsOn tasks.named('jandex')
     // Ensure grpc-wiremock is built before compiling tests
-    dependsOn project(':libraries:grpc-wiremock').tasks.named('classes')
+
 }
 
 // Publishing configuration inherited from root project

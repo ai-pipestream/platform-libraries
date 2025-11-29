@@ -1,0 +1,51 @@
+plugins {
+    alias(libs.plugins.java.library)
+    alias(libs.plugins.quarkus)
+    alias(libs.plugins.jandex)
+}
+
+dependencies {
+    // Testcontainers for spinning up the external WireMock server
+    testImplementation libs.testcontainers.junit
+    testImplementation(libs.testcontainers) {
+        exclude group: 'com.google.protobuf', module: 'protobuf-java'
+        exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
+    } // Core Testcontainers
+    implementation(libs.testcontainers) {
+        exclude group: 'com.google.protobuf', module: 'protobuf-java'
+        exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
+    } // Need compile access for GenericContainer in TestResource
+
+    // WireMock client for configuring stubs via HTTP Admin API
+    // We don't use wiremock-standalone here because the server is external
+    implementation(libs.wiremock.core) {
+        exclude group: 'com.google.protobuf', module: 'protobuf-java'
+        exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
+    }
+
+    // Our Protobuf utilities for converting Proto messages to JSON
+    api libs.protobuf.java.util
+    api libs.protobuf.java
+
+    // Quarkus testing integration
+    implementation libs.quarkus.test.common // For QuarkusTestResourceLifecycleManager
+    testImplementation libs.quarkus.junit5
+    testImplementation libs.quarkus.test.common
+
+    // Depend on our gRPC stubs and google descriptor
+    compileOnly project(':grpc:grpc-stubs')
+    testImplementation project(':grpc:grpc-stubs')
+    api project(':grpc:grpc-google-descriptor')
+
+    // Force newer Protobuf runtime to match grpc-stubs generation (4.33.1)
+    // This overrides older versions transitively pulled by WireMock
+    implementation('com.google.protobuf:protobuf-java:4.33.1')
+    implementation('com.google.protobuf:protobuf-java-util:4.33.1')
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.protobuf:protobuf-java:4.33.1'
+        force 'com.google.protobuf:protobuf-java-util:4.33.1'
+    }
+}

@@ -53,7 +53,7 @@ include 'grpc:grpc-google-descriptor'
 
 // library modules
 include 'libraries:pipeline-commons'
+include 'libraries:wiremock-grpc-client'
 include 'libraries:data-util'
 include 'libraries:dynamic-grpc'
 include 'libraries:dynamic-grpc-registration-clients'
-include 'libraries:grpc-wiremock'

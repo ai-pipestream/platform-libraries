@@ -5,8 +5,6 @@ plugins {
 }
 
 dependencies {
-    implementation libs.quarkus.wiremock
-
     // Quarkus dependencies
     implementation libs.bundles.quarkus.common
     implementation libs.quarkus.jackson

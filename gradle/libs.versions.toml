@@ -1,5 +1,5 @@
 [versions]
-quarkus = "3.29.4"
+quarkus = "3.30.1"
 jandex-plugin = "2.3.0"
 commons-lang3 = "3.20.0"
 opennlp-tools = "2.5.6.1"
@@ -13,7 +13,7 @@ protobuf = "4.33.1"
 
 # Quarkiverse extensions
 quinoa = "2.7.0"
-wiremock = "1.5.2"
+wiremock = "3.13.2"
 wiremock-standalone = "3.13.2"
 wiremock-grpc-extension = "0.11.0"
 hibernate-types = "2.2.0"
@@ -25,6 +25,7 @@ apicurio = "3.1.2"
 # Testing
 awaitility = "4.3.0"
 testcontainers = "2.0.2"
+testcontainers-junit = "1.20.4"
 assertj = "3.27.6"
 hamcrest = "3.0"
 json-schema-validator = "2.0.0"
@@ -108,7 +109,7 @@ mutiny-test-utils = { module = "io.smallrye.reactive:mutiny-test-utils", version
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers-consul" }
-testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers-consul" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers-junit" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
@@ -123,14 +124,13 @@ httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", versio
 
 # Quarkiverse extensions
 quarkus-quinoa = { module = "io.quarkiverse.quinoa:quarkus-quinoa", version.ref = "quinoa" }
-quarkus-wiremock = { module = "io.quarkiverse.wiremock:quarkus-wiremock", version.ref = "wiremock" }
-quarkus-wiremock-test = { module = "io.quarkiverse.wiremock:quarkus-wiremock-test", version.ref = "wiremock" }
 quarkus-hibernate-types = { module = "io.quarkiverse.hibernatetypes:quarkus-hibernate-types", version.ref = "hibernate-types" }
 quarkus-mcp-server-sse = { module = "io.quarkiverse.mcp:quarkus-mcp-server-sse", version.ref = "quarkus-mcp-server" }
 
 # WireMock Standalone (for grpc-wiremock library)
 wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock-standalone" }
 wiremock-grpc-extension-standalone = { module = "org.wiremock:wiremock-grpc-extension-standalone", version.ref = "wiremock-grpc-extension" }
+wiremock-core = { module = "org.wiremock:wiremock", version.ref = "wiremock" }
 
 # AWS SDK
 aws-sdk-url-connection = { module = "software.amazon.awssdk:url-connection-client", version.ref = "aws-sdk" }
