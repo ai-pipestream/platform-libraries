@@ -21,7 +21,7 @@ dependencies {
     // Provides grpc/health/v1/health.proto for import resolution during code generation
     implementation libs.grpc.services
     // Depend on pipestream-protos for proto file scanning
-    implementation project(':grpc:pipestream-protos')
+    implementation libs.pipestream.protos
     testImplementation libs.quarkus.junit5
 }
 

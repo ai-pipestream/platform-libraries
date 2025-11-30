@@ -54,6 +54,8 @@ commonmark = "0.27.0"
 pdfbox = "3.0.6"
 # Security
 password4j = "1.8.4"
+pipestream-protos = "0.3.0"
+pipestream-wiremock-server = "0.1.2"
 
 [libraries]
 # Quarkus BOM
@@ -180,12 +182,14 @@ tika4-shaded = { module = "ai.pipestream:tika4-shaded", version.ref = "tika4-sha
 
 # Sample documents test data
 pipestream-sample-doc-types = { module = "ai.pipestream:sample-doc-types", version.ref = "sample-documents" }
+pipestream-protos = { module = "ai.pipestream:pipestream-protos", version.ref = "pipestream-protos" }
 pipestream-test-documents = { module = "ai.pipestream:test-documents", version.ref = "sample-documents" }
 pipestream-parser-pipedoc-parsed = { module = "ai.pipestream:parser-pipedoc-parsed", version.ref = "sample-documents" }
 pipestream-double-chunked-pipedocs = { module = "ai.pipestream:double-chunked-pipedocs", version.ref = "sample-documents" }
 
 # WireMock gRPC Client (New Library)
 pipestream-wiremock-grpc-client = { module = "ai.pipestream:wiremock-grpc-client" }
+pipestream-wiremock-server = { module = "ai.pipestream:pipestream-wiremock-server", version.ref = "pipestream-wiremock-server" }
 
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }

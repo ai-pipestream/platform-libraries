@@ -47,7 +47,6 @@ include 'devservices:devservices'
 include 'devservices:devservices-deployment'
 
 // grpc modules
-include 'grpc:pipestream-protos'
 include 'grpc:grpc-stubs'
 include 'grpc:grpc-google-descriptor'
 

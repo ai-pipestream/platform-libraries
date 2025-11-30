@@ -21,7 +21,7 @@ dependencies {
         exclude group: 'com.google.protobuf', module: 'protobuf-java'
         exclude group: 'com.google.protobuf', module: 'protobuf-java-util'
     }
-    api libs.wiremock.grpc.extension
+    api libs.wiremock.grpc.extension.standalone
 
     // Our Protobuf utilities for converting Proto messages to JSON
     api libs.protobuf.java.util
@@ -31,6 +31,7 @@ dependencies {
     implementation libs.quarkus.test.common // For QuarkusTestResourceLifecycleManager
     testImplementation libs.quarkus.junit5
     testImplementation libs.quarkus.test.common
+    testImplementation libs.pipestream.wiremock.server
 
     // Depend on our gRPC stubs and google descriptor
     compileOnly project(':grpc:grpc-stubs')

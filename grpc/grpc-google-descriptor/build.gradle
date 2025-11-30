@@ -16,6 +16,8 @@ dependencies {
 
     // Proto files from grpc-services for import resolution (grpc/health/v1/health.proto)
     protobuf libs.grpc.services
+    // Consume external protos
+    protobuf libs.pipestream.protos
 }
 
 // group and version inherited from root project
@@ -27,15 +29,6 @@ java {
 
 compileJava {
     options.encoding = 'UTF-8'
-}
-
-// Reference proto files from pipestream-protos project
-sourceSets {
-    main {
-        proto {
-            srcDir "${project(':grpc:pipestream-protos').projectDir}/src/main/proto"
-        }
-    }
 }
 
 def descriptorOutputDir = "${buildDir}/generated/grpc-descriptor"
